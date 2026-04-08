@@ -1,0 +1,18 @@
+.DS_Store
+.env
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local scratch files from the parent PyCharm miscellaneous project.
+111.py
+app
+app.py
+note.py
+练习题.py
