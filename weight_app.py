@@ -675,6 +675,30 @@ INVITE_TEMPLATE = """
                     <button class="danger-button" type="submit">修改所有账号密码</button>
                 </form>
             </section>
+
+            <section class="panel">
+                <h2>管理账号密码</h2>
+                <p>修改当前管理登录密码。下次进入管理页时使用新密码。</p>
+                <form method="post" action="{{ url_for('set_admin_password_route') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if admin_key_required %}
+                    <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
+                    {% endif %}
+                    <label>
+                        当前管理密码
+                        <input name="current_password" type="password" autocomplete="current-password" required>
+                    </label>
+                    <label>
+                        新管理密码
+                        <input name="new_password" type="password" minlength="6" autocomplete="new-password" required>
+                    </label>
+                    <label>
+                        确认新管理密码
+                        <input name="confirm_password" type="password" minlength="6" autocomplete="new-password" required>
+                    </label>
+                    <button type="submit">修改管理密码</button>
+                </form>
+            </section>
         </div>
 
         <section class="panel" style="margin-top: 16px;">
@@ -1551,6 +1575,27 @@ def init_db() -> None:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admin_credentials (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO admin_credentials (id, username, password_hash, updated_at)
+            VALUES (1, ?, ?, ?)
+            """,
+            (
+                app.config["ADMIN_USERNAME"],
+                generate_password_hash(app.config["ADMIN_PASSWORD"]),
+                datetime.now().isoformat(timespec="seconds"),
+            ),
+        )
         record_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(weight_records)").fetchall()
         }
@@ -2184,12 +2229,21 @@ def invite_admin_key_matches(submitted_key: str) -> bool:
 
 
 def admin_credentials_match(username: str, password: str) -> bool:
-    expected_username = app.config["ADMIN_USERNAME"]
-    expected_password = app.config["ADMIN_PASSWORD"]
-    return bool(username and password) and secrets.compare_digest(
-        username,
-        expected_username,
-    ) and secrets.compare_digest(password, expected_password)
+    if not username or not password:
+        return False
+    with closing(get_connection()) as connection:
+        row = connection.execute(
+            """
+            SELECT username, password_hash
+            FROM admin_credentials
+            WHERE id = 1
+            """
+        ).fetchone()
+    return bool(
+        row
+        and secrets.compare_digest(username, row["username"])
+        and check_password_hash(row["password_hash"], password)
+    )
 
 
 def admin_request_authorized(submitted_key: str = "") -> bool:
@@ -2277,6 +2331,36 @@ def set_all_user_passwords(password: str) -> tuple[bool, str]:
         )
         connection.commit()
     return True, f"已修改 {len(users)} 个账号的密码。"
+
+
+def set_admin_password(current_password: str, new_password: str, confirm_password: str) -> tuple[bool, str]:
+    with closing(get_connection()) as connection:
+        row = connection.execute(
+            """
+            SELECT username, password_hash
+            FROM admin_credentials
+            WHERE id = 1
+            """
+        ).fetchone()
+        if not row:
+            return False, "管理账号不存在。"
+        if not check_password_hash(row["password_hash"], current_password):
+            return False, "当前管理密码错误。"
+        if len(new_password) < 6:
+            return False, "新管理密码至少需要 6 位。"
+        if new_password != confirm_password:
+            return False, "两次输入的新管理密码不一致。"
+
+        connection.execute(
+            """
+            UPDATE admin_credentials
+            SET password_hash = ?, updated_at = ?
+            WHERE id = 1
+            """,
+            (generate_password_hash(new_password), datetime.now().isoformat(timespec="seconds")),
+        )
+        connection.commit()
+    return True, "管理密码已修改。"
 
 
 def render_invite_codes_page(
@@ -2394,6 +2478,29 @@ def set_all_user_passwords_route():
             admin_authorized=False,
         )
     ok, message = set_all_user_passwords(request.form.get("password", ""))
+    return render_invite_codes_page(
+        message=message,
+        admin_key_value=admin_key,
+        admin_authorized=True,
+        success=ok,
+    )
+
+
+@app.post("/admin/password")
+def set_admin_password_route():
+    init_db()
+    admin_key = request.form.get("admin_key", "")
+    if not admin_request_authorized(admin_key):
+        return render_invite_codes_page(
+            message="请先登录管理界面。",
+            admin_key_value=admin_key,
+            admin_authorized=False,
+        )
+    ok, message = set_admin_password(
+        request.form.get("current_password", ""),
+        request.form.get("new_password", ""),
+        request.form.get("confirm_password", ""),
+    )
     return render_invite_codes_page(
         message=message,
         admin_key_value=admin_key,

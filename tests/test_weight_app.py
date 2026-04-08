@@ -142,6 +142,58 @@ class WeightAppTestCase(unittest.TestCase):
         )
         self.assertIn("邀请码已生成", response.get_data(as_text=True))
 
+    def test_admin_page_updates_admin_password(self):
+        self.weight_app.app.config["INVITE_ADMIN_KEY"] = ""
+        response = self.client.get("/invites")
+        response = self.client.post(
+            "/admin/authorize",
+            data={
+                "csrf_token": self.csrf_from(response),
+                "admin_username": "root",
+                "admin_password": "Joeye2007",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("管理权限已验证", response.get_data(as_text=True))
+
+        response = self.client.post(
+            "/admin/password",
+            data={
+                "csrf_token": self.csrf_from(response),
+                "current_password": "Joeye2007",
+                "new_password": "new-admin-password",
+                "confirm_password": "new-admin-password",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("管理密码已修改", response.get_data(as_text=True))
+
+        with self.client.session_transaction() as session_data:
+            session_data.pop("admin_authenticated", None)
+
+        response = self.client.get("/invites")
+        response = self.client.post(
+            "/admin/authorize",
+            data={
+                "csrf_token": self.csrf_from(response),
+                "admin_username": "root",
+                "admin_password": "Joeye2007",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("管理账号或密码错误", response.get_data(as_text=True))
+
+        response = self.client.post(
+            "/admin/authorize",
+            data={
+                "csrf_token": self.csrf_from(response),
+                "admin_username": "root",
+                "admin_password": "new-admin-password",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("管理权限已验证", response.get_data(as_text=True))
+
     def test_admin_page_lists_users_and_updates_one_password(self):
         self.register("alice")
         response = self.client.get("/invites")
