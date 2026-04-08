@@ -41,8 +41,9 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE=os.getenv("SESSION_COOKIE_SAMESITE", "Lax"),
     SESSION_COOKIE_SECURE=env_bool("SESSION_COOKIE_SECURE", False),
-    REGISTRATION_ENABLED=env_bool("REGISTRATION_ENABLED", False),
+    REGISTRATION_ENABLED=env_bool("REGISTRATION_ENABLED", True),
     REGISTER_INVITE_CODE=os.getenv("REGISTER_INVITE_CODE", ""),
+    INVITE_ADMIN_KEY=os.getenv("INVITE_ADMIN_KEY", ""),
     CSRF_ENABLED=env_bool("CSRF_ENABLED", True),
     RATE_LIMIT_ATTEMPTS=int(os.getenv("RATE_LIMIT_ATTEMPTS", "8")),
     RATE_LIMIT_WINDOW_SECONDS=int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "300")),
@@ -246,6 +247,20 @@ AUTH_TEMPLATE = """
             margin-bottom: 0;
         }
 
+        .inline-link {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .inline-link:hover {
+            text-decoration: underline;
+        }
+
+        .intro .inline-link {
+            color: #fff;
+        }
+
         @media (max-width: 780px) {
             body {
                 padding: 16px;
@@ -277,6 +292,7 @@ AUTH_TEMPLATE = """
                 <li>记录每日体重和备注</li>
                 <li>查看趋势、BMI 和目标进度</li>
                 <li>批量导入历史数据</li>
+                <li><a class="inline-link" href="{{ url_for('invite_codes_page') }}">生成邀请码</a></li>
             </ul>
         </section>
         <section class="card">
@@ -314,12 +330,10 @@ AUTH_TEMPLATE = """
                         <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
                     </span>
                 </label>
-                {% if invite_required %}
                 <label>
                     邀请码
                     <input name="invite_code" required>
                 </label>
-                {% endif %}
                 <button type="submit">创建账号</button>
             </form>
             {% else %}
@@ -343,6 +357,193 @@ AUTH_TEMPLATE = """
         });
     })();
 </script>
+</html>
+"""
+
+INVITE_TEMPLATE = """
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邀请码生成器</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #eef3f7;
+            --card: #ffffff;
+            --primary: #0f766e;
+            --primary-hover: #0b5f59;
+            --primary-soft: #d9f3ef;
+            --muted: #5f6f6c;
+            --border: #d6e0e5;
+            --text: #12201c;
+            --shadow: 0 18px 40px rgba(18, 32, 28, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            line-height: 1.5;
+        }
+
+        .card {
+            width: min(620px, 100%);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+            line-height: 1.2;
+        }
+
+        p {
+            margin: 0 0 16px;
+            color: var(--muted);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 14px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        input, button {
+            width: 100%;
+            margin-top: 6px;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font: inherit;
+        }
+
+        input {
+            border: 1px solid var(--border);
+            color: var(--text);
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+        }
+
+        button {
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            color: #9a3412;
+        }
+
+        .code-box {
+            display: grid;
+            gap: 8px;
+            margin: 18px 0;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .code-value {
+            overflow-wrap: anywhere;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-weight: 700;
+        }
+
+        .action-link:hover {
+            background: var(--primary-soft);
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>邀请码生成器</h1>
+        <p>生成的邀请码只能成功注册一个账号。注册成功后，该邀请码会自动失效。</p>
+
+        {% if message %}
+        <div class="message">{{ message }}</div>
+        {% endif %}
+
+        {% if invite_code %}
+        <div class="code-box">
+            <span>新邀请码</span>
+            <div class="code-value">{{ invite_code }}</div>
+            <p>把这个邀请码发给需要注册的用户，对方在登录页的注册表单中输入即可。</p>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('create_invite_code_route') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if admin_key_required %}
+            <label>
+                管理密钥
+                <input name="admin_key" type="password" value="{{ admin_key_value }}" required>
+            </label>
+            {% else %}
+            <p>当前未配置 `INVITE_ADMIN_KEY`，生成器仅允许已登录用户使用。</p>
+            {% endif %}
+            <button type="submit">生成一个邀请码</button>
+        </form>
+
+        <div class="actions">
+            <a class="action-link" href="{{ url_for('auth_page') }}">返回登录页</a>
+            {% if current_user_id %}
+            <a class="action-link" href="{{ url_for('index') }}">返回记录页</a>
+            {% endif %}
+        </div>
+    </main>
+</body>
 </html>
 """
 
@@ -1157,11 +1358,32 @@ def init_db() -> None:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS invite_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                used_by_user_id INTEGER,
+                FOREIGN KEY (used_by_user_id) REFERENCES users(id)
+            )
+            """
+        )
         record_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(weight_records)").fetchall()
         }
         if "user_id" not in record_columns:
             connection.execute("ALTER TABLE weight_records ADD COLUMN user_id INTEGER")
+        seed_code = app.config["REGISTER_INVITE_CODE"].strip()
+        if seed_code:
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO invite_codes (code, created_at)
+                VALUES (?, ?)
+                """,
+                (seed_code, datetime.now().isoformat(timespec="seconds")),
+            )
         connection.commit()
 
 
@@ -1183,32 +1405,108 @@ def get_current_username() -> str:
     return session.get("username", "")
 
 
-def create_user(username: str, password: str) -> tuple[bool, str]:
+def validate_user_credentials(username: str, password: str) -> tuple[bool, str]:
     if not username or not password:
         return False, "用户名和密码不能为空。"
     if len(username) < 2 or len(username) > 32:
         return False, "用户名长度需要在 2 到 32 个字符之间。"
     if len(password) < 6:
         return False, "密码至少需要 6 位。"
+    return True, ""
+
+
+def insert_user(connection: sqlite3.Connection, username: str, password: str) -> tuple[bool, str, int | None]:
+    exists = connection.execute(
+        "SELECT id FROM users WHERE username = ?",
+        (username,),
+    ).fetchone()
+    if exists:
+        return False, "用户名已存在。", None
+
+    connection.execute(
+        """
+        INSERT INTO users (username, password_hash, created_at)
+        VALUES (?, ?, ?)
+        """,
+        (username, generate_password_hash(password), datetime.now().isoformat(timespec="seconds")),
+    )
+    user_id = connection.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()["id"]
+    connection.execute(
+        "INSERT OR IGNORE INTO user_profiles (user_id, height_cm, target_weight) VALUES (?, NULL, NULL)",
+        (user_id,),
+    )
+    return True, "注册成功，请登录。", int(user_id)
+
+
+def create_user(username: str, password: str) -> tuple[bool, str]:
+    ok, message = validate_user_credentials(username, password)
+    if not ok:
+        return False, message
 
     with closing(get_connection()) as connection:
-        exists = connection.execute(
-            "SELECT id FROM users WHERE username = ?",
-            (username,),
+        ok, message, _ = insert_user(connection, username, password)
+        connection.commit()
+    return ok, message
+
+
+def generate_invite_code() -> str:
+    return secrets.token_urlsafe(12).replace("-", "").replace("_", "")[:16].upper()
+
+
+def create_invite_code() -> str:
+    with closing(get_connection()) as connection:
+        for _ in range(5):
+            code = generate_invite_code()
+            try:
+                connection.execute(
+                    """
+                    INSERT INTO invite_codes (code, created_at)
+                    VALUES (?, ?)
+                    """,
+                    (code, datetime.now().isoformat(timespec="seconds")),
+                )
+                connection.commit()
+                return code
+            except sqlite3.IntegrityError:
+                continue
+    raise RuntimeError("Failed to generate a unique invite code.")
+
+
+def create_user_with_invite_code(username: str, password: str, invite_code: str) -> tuple[bool, str]:
+    ok, message = validate_user_credentials(username, password)
+    if not ok:
+        return False, message
+
+    code = invite_code.strip()
+    if not code:
+        return False, "请输入邀请码。"
+
+    with closing(get_connection()) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        invite_row = connection.execute(
+            """
+            SELECT id, used_at
+            FROM invite_codes
+            WHERE code = ?
+            """,
+            (code,),
         ).fetchone()
-        if exists:
-            return False, "用户名已存在。"
+        if not invite_row or invite_row["used_at"] is not None:
+            connection.rollback()
+            return False, "邀请码错误或已被使用。"
+
+        ok, message, user_id = insert_user(connection, username, password)
+        if not ok or user_id is None:
+            connection.rollback()
+            return False, message
+
         connection.execute(
             """
-            INSERT INTO users (username, password_hash, created_at)
-            VALUES (?, ?, ?)
+            UPDATE invite_codes
+            SET used_at = ?, used_by_user_id = ?
+            WHERE id = ? AND used_at IS NULL
             """,
-            (username, generate_password_hash(password), datetime.now().isoformat(timespec="seconds")),
-        )
-        user_id = connection.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()["id"]
-        connection.execute(
-            "INSERT OR IGNORE INTO user_profiles (user_id, height_cm, target_weight) VALUES (?, NULL, NULL)",
-            (user_id,),
+            (datetime.now().isoformat(timespec="seconds"), user_id, invite_row["id"]),
         )
         connection.commit()
     return True, "注册成功，请登录。"
@@ -1699,6 +1997,24 @@ def build_dual_chart_svg(records: list[dict], chart_mode: str, target_weight: fl
     )
 
 
+def invite_admin_key_matches(submitted_key: str) -> bool:
+    admin_key = app.config["INVITE_ADMIN_KEY"].strip()
+    if not admin_key:
+        return get_current_user_id() is not None
+    return bool(submitted_key) and secrets.compare_digest(admin_key, submitted_key)
+
+
+def render_invite_codes_page(message: str = "", invite_code: str = "", admin_key_value: str = ""):
+    return render_template_string(
+        INVITE_TEMPLATE,
+        message=message,
+        invite_code=invite_code,
+        admin_key_required=bool(app.config["INVITE_ADMIN_KEY"].strip()),
+        admin_key_value=admin_key_value,
+        current_user_id=get_current_user_id(),
+    )
+
+
 @app.get("/auth")
 def auth_page():
     init_db()
@@ -1708,8 +2024,26 @@ def auth_page():
         AUTH_TEMPLATE,
         message=request.args.get("message", ""),
         registration_enabled=app.config["REGISTRATION_ENABLED"],
-        invite_required=bool(app.config["REGISTER_INVITE_CODE"]),
     )
+
+
+@app.get("/invites")
+def invite_codes_page():
+    init_db()
+    return render_invite_codes_page(message=request.args.get("message", ""))
+
+
+@app.post("/invites")
+def create_invite_code_route():
+    init_db()
+    admin_key = request.form.get("admin_key", "")
+    if not invite_admin_key_matches(admin_key):
+        return render_invite_codes_page(
+            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            admin_key_value=admin_key,
+        )
+    code = create_invite_code()
+    return render_invite_codes_page(message="邀请码已生成。", invite_code=code, admin_key_value=admin_key)
 
 
 @app.post("/register")
@@ -1720,12 +2054,10 @@ def register():
         return redirect(url_for("auth_page", message="操作过于频繁，请稍后再试。"))
     if not app.config["REGISTRATION_ENABLED"]:
         return redirect(url_for("auth_page", message="当前未开放注册。"))
-    invite_code = app.config["REGISTER_INVITE_CODE"]
-    if invite_code and not secrets.compare_digest(invite_code, request.form.get("invite_code", "")):
-        return redirect(url_for("auth_page", message="邀请码错误。"))
-    ok, message = create_user(
+    ok, message = create_user_with_invite_code(
         username,
         request.form.get("password", ""),
+        request.form.get("invite_code", ""),
     )
     return redirect(url_for("auth_page", message=message))
 

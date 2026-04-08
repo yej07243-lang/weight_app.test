@@ -20,6 +20,7 @@ class WeightAppTestCase(unittest.TestCase):
         os.environ["SESSION_COOKIE_SECURE"] = "false"
         os.environ["REGISTRATION_ENABLED"] = "true"
         os.environ["REGISTER_INVITE_CODE"] = "invite-123"
+        os.environ["INVITE_ADMIN_KEY"] = "admin-key"
 
         sys.modules.pop("weight_app", None)
         self.weight_app = importlib.import_module("weight_app")
@@ -35,7 +36,11 @@ class WeightAppTestCase(unittest.TestCase):
         self.assertIsNotNone(match)
         return match.group(1)
 
-    def register(self, username: str, password: str = "secret123", invite_code: str = "invite-123"):
+    def invite_code(self) -> str:
+        return self.weight_app.create_invite_code()
+
+    def register(self, username: str, password: str = "secret123", invite_code: str | None = None):
+        invite_code = invite_code or self.invite_code()
         response = self.client.get("/auth")
         return self.client.post(
             "/register",
@@ -76,9 +81,29 @@ class WeightAppTestCase(unittest.TestCase):
 
     def test_registration_requires_invite_code(self):
         response = self.register("alice", invite_code="wrong")
-        self.assertIn("邀请码错误", response.get_data(as_text=True))
+        self.assertIn("邀请码错误或已被使用", response.get_data(as_text=True))
 
-        response = self.register("alice")
+        invite_code = self.invite_code()
+        response = self.register("alice", invite_code=invite_code)
+        self.assertIn("注册成功", response.get_data(as_text=True))
+
+        response = self.register("bob", invite_code=invite_code)
+        self.assertIn("邀请码错误或已被使用", response.get_data(as_text=True))
+
+    def test_invite_code_generator_creates_registration_code(self):
+        response = self.client.get("/invites")
+        csrf_token = self.csrf_from(response)
+        response = self.client.post(
+            "/invites",
+            data={"csrf_token": csrf_token, "admin_key": "admin-key"},
+            follow_redirects=True,
+        )
+        page = response.get_data(as_text=True)
+        self.assertIn("邀请码已生成", page)
+        match = re.search(r'<div class="code-value">([^<]+)</div>', page)
+        self.assertIsNotNone(match)
+
+        response = self.register("alice", invite_code=match.group(1))
         self.assertIn("注册成功", response.get_data(as_text=True))
 
     def test_registration_can_be_disabled(self):

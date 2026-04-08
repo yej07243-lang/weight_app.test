@@ -18,15 +18,16 @@ If traffic grows, move to PostgreSQL later.
 - `SECRET_KEY`: strong random string. The app will not start without it.
 - `PORT`: runtime port, default `5000`
 - `WEIGHT_DB_PATH`: optional database path, default `/data/weight_records.db` in Docker
-- `REGISTRATION_ENABLED`: set `true` only when you want users to create accounts
-- `REGISTER_INVITE_CODE`: optional invite code required during registration
+- `REGISTRATION_ENABLED`: set `true` to show the invite-only registration form, or `false` to close registration
+- `INVITE_ADMIN_KEY`: key required on `/invites` to generate one-time invite codes
+- `REGISTER_INVITE_CODE`: optional legacy seed invite code; it is imported once and can register one account
 - `SESSION_COOKIE_SECURE`: keep `true` when served over HTTPS
 
 ## Security defaults
 
 - POST forms use CSRF tokens.
 - Login and registration have a small in-memory rate limit.
-- Registration is disabled by default.
+- Registration is invite-only by default. Set `REGISTRATION_ENABLED=false` to close registration completely.
 - Session cookies are `HttpOnly`, `SameSite=Lax`, and secure by default.
 - The Docker image does not include the local SQLite database.
 
@@ -37,9 +38,11 @@ cd /Users/a1050/PyCharmMiscProject
 /Users/a1050/PyCharmMiscProject/.venv/bin/pip install -r requirements.txt
 SECRET_KEY='replace-with-a-long-random-value' \
 REGISTRATION_ENABLED=true \
-REGISTER_INVITE_CODE='replace-with-an-invite-code' \
+INVITE_ADMIN_KEY='replace-with-generator-admin-key' \
 /Users/a1050/PyCharmMiscProject/.venv/bin/gunicorn -w 1 -b 0.0.0.0:5000 wsgi:app
 ```
+
+After starting the app, open `/invites`, enter `INVITE_ADMIN_KEY`, and generate an invite code. Each invite code can register one account only.
 
 ## Docker build
 
@@ -55,7 +58,8 @@ docker run -d \
   --name weight-app \
   -p 80:5000 \
   -e SECRET_KEY='replace-with-a-long-random-value' \
-  -e REGISTRATION_ENABLED=false \
+  -e REGISTRATION_ENABLED=true \
+  -e INVITE_ADMIN_KEY='replace-with-generator-admin-key' \
   -v weight-app-data:/data \
   weight-app
 ```
