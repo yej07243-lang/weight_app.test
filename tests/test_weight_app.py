@@ -115,6 +115,33 @@ class WeightAppTestCase(unittest.TestCase):
         response = self.register("alice", invite_code=match.group(1))
         self.assertIn("注册成功", response.get_data(as_text=True))
 
+    def test_admin_page_uses_dedicated_login_when_admin_key_is_empty(self):
+        self.weight_app.app.config["INVITE_ADMIN_KEY"] = ""
+        response = self.client.get("/invites")
+        page = response.get_data(as_text=True)
+        self.assertIn("管理账号", page)
+        self.assertIn("管理密码", page)
+        self.assertNotIn("当前未配置", page)
+
+        response = self.client.post(
+            "/admin/authorize",
+            data={
+                "csrf_token": self.csrf_from(response),
+                "admin_username": "root",
+                "admin_password": "Joeye2007",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("管理权限已验证", response.get_data(as_text=True))
+        self.assertIn("账号列表", response.get_data(as_text=True))
+
+        response = self.client.post(
+            "/invites",
+            data={"csrf_token": self.csrf_from(response)},
+            follow_redirects=True,
+        )
+        self.assertIn("邀请码已生成", response.get_data(as_text=True))
+
     def test_admin_page_lists_users_and_updates_one_password(self):
         self.register("alice")
         response = self.client.get("/invites")

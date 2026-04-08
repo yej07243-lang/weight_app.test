@@ -44,6 +44,8 @@ app.config.update(
     REGISTRATION_ENABLED=env_bool("REGISTRATION_ENABLED", True),
     REGISTER_INVITE_CODE=os.getenv("REGISTER_INVITE_CODE", ""),
     INVITE_ADMIN_KEY=os.getenv("INVITE_ADMIN_KEY", ""),
+    ADMIN_USERNAME=os.getenv("ADMIN_USERNAME", "root"),
+    ADMIN_PASSWORD=os.getenv("ADMIN_PASSWORD", "Joeye2007"),
     CSRF_ENABLED=env_bool("CSRF_ENABLED", True),
     RATE_LIMIT_ATTEMPTS=int(os.getenv("RATE_LIMIT_ATTEMPTS", "8")),
     RATE_LIMIT_WINDOW_SECONDS=int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "300")),
@@ -610,14 +612,14 @@ INVITE_TEMPLATE = """
             <h2>验证管理权限</h2>
             <form method="post" action="{{ url_for('admin_authorize_route') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% if admin_key_required %}
                 <label>
-                    管理密钥
-                    <input name="admin_key" type="password" value="{{ admin_key_value }}" required>
+                    管理账号
+                    <input name="admin_username" value="{{ admin_username_value }}" autocomplete="username" required>
                 </label>
-                {% else %}
-                <p>当前未配置 `INVITE_ADMIN_KEY`，请先登录后再管理账号。</p>
-                {% endif %}
+                <label>
+                    管理密码
+                    <input name="admin_password" type="password" autocomplete="current-password" required>
+                </label>
                 <button type="submit">进入管理</button>
             </form>
         </section>
@@ -2178,9 +2180,20 @@ def build_dual_chart_svg(records: list[dict], chart_mode: str, target_weight: fl
 
 def invite_admin_key_matches(submitted_key: str) -> bool:
     admin_key = app.config["INVITE_ADMIN_KEY"].strip()
-    if not admin_key:
-        return get_current_user_id() is not None
-    return bool(submitted_key) and secrets.compare_digest(admin_key, submitted_key)
+    return bool(admin_key and submitted_key) and secrets.compare_digest(admin_key, submitted_key)
+
+
+def admin_credentials_match(username: str, password: str) -> bool:
+    expected_username = app.config["ADMIN_USERNAME"]
+    expected_password = app.config["ADMIN_PASSWORD"]
+    return bool(username and password) and secrets.compare_digest(
+        username,
+        expected_username,
+    ) and secrets.compare_digest(password, expected_password)
+
+
+def admin_request_authorized(submitted_key: str = "") -> bool:
+    return bool(session.get("admin_authenticated")) or invite_admin_key_matches(submitted_key)
 
 
 def fetch_admin_users() -> list[dict]:
@@ -2270,11 +2283,12 @@ def render_invite_codes_page(
     message: str = "",
     invite_code: str = "",
     admin_key_value: str = "",
+    admin_username_value: str = "",
     admin_authorized: bool | None = None,
     success: bool = False,
 ):
     if admin_authorized is None:
-        admin_authorized = invite_admin_key_matches(admin_key_value)
+        admin_authorized = admin_request_authorized(admin_key_value)
     user_rows, invite_rows = admin_page_data(admin_authorized)
     return render_template_string(
         INVITE_TEMPLATE,
@@ -2284,6 +2298,7 @@ def render_invite_codes_page(
         admin_authorized=admin_authorized,
         admin_key_required=bool(app.config["INVITE_ADMIN_KEY"].strip()),
         admin_key_value=admin_key_value,
+        admin_username_value=admin_username_value,
         current_user_id=get_current_user_id(),
         user_rows=user_rows,
         invite_rows=invite_rows,
@@ -2312,15 +2327,18 @@ def invite_codes_page():
 def admin_authorize_route():
     init_db()
     admin_key = request.form.get("admin_key", "")
-    if not invite_admin_key_matches(admin_key):
+    admin_username = request.form.get("admin_username", "").strip()
+    admin_password = request.form.get("admin_password", "")
+    if not invite_admin_key_matches(admin_key) and not admin_credentials_match(admin_username, admin_password):
         return render_invite_codes_page(
-            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            message="管理账号或密码错误。",
             admin_key_value=admin_key,
+            admin_username_value=admin_username,
             admin_authorized=False,
         )
+    session["admin_authenticated"] = True
     return render_invite_codes_page(
         message="管理权限已验证。",
-        admin_key_value=admin_key,
         admin_authorized=True,
         success=True,
     )
@@ -2330,10 +2348,11 @@ def admin_authorize_route():
 def create_invite_code_route():
     init_db()
     admin_key = request.form.get("admin_key", "")
-    if not invite_admin_key_matches(admin_key):
+    if not admin_request_authorized(admin_key):
         return render_invite_codes_page(
-            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            message="请先登录管理界面。",
             admin_key_value=admin_key,
+            admin_authorized=False,
         )
     code = create_invite_code()
     return render_invite_codes_page(
@@ -2349,9 +2368,9 @@ def create_invite_code_route():
 def set_user_password_route(user_id: int):
     init_db()
     admin_key = request.form.get("admin_key", "")
-    if not invite_admin_key_matches(admin_key):
+    if not admin_request_authorized(admin_key):
         return render_invite_codes_page(
-            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            message="请先登录管理界面。",
             admin_key_value=admin_key,
             admin_authorized=False,
         )
@@ -2368,9 +2387,9 @@ def set_user_password_route(user_id: int):
 def set_all_user_passwords_route():
     init_db()
     admin_key = request.form.get("admin_key", "")
-    if not invite_admin_key_matches(admin_key):
+    if not admin_request_authorized(admin_key):
         return render_invite_codes_page(
-            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            message="请先登录管理界面。",
             admin_key_value=admin_key,
             admin_authorized=False,
         )
