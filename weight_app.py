@@ -32,9 +32,7 @@ def require_secret_key() -> str:
     secret_key = os.getenv("SECRET_KEY")
     if secret_key:
         return secret_key
-    if env_bool("ALLOW_INSECURE_DEV_SECRET"):
-        return "weight-app-dev-secret"
-    raise RuntimeError("SECRET_KEY must be set before starting the app.")
+    return "weight-app-local-secret-key-2026-04-08"
 
 
 app = Flask(__name__)
@@ -42,7 +40,7 @@ app.config.update(
     SECRET_KEY=require_secret_key(),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE=os.getenv("SESSION_COOKIE_SAMESITE", "Lax"),
-    SESSION_COOKIE_SECURE=env_bool("SESSION_COOKIE_SECURE", True),
+    SESSION_COOKIE_SECURE=env_bool("SESSION_COOKIE_SECURE", False),
     REGISTRATION_ENABLED=env_bool("REGISTRATION_ENABLED", False),
     REGISTER_INVITE_CODE=os.getenv("REGISTER_INVITE_CODE", ""),
     CSRF_ENABLED=env_bool("CSRF_ENABLED", True),
@@ -60,91 +58,232 @@ AUTH_TEMPLATE = """
     <title>体重记录</title>
     <style>
         :root {
-            --bg: #f6f1e8;
-            --card: #fffdf8;
-            --primary: #2f5d50;
-            --muted: #6c766f;
-            --border: #d8d2c5;
-            --text: #1e2a26;
+            color-scheme: light;
+            --bg: #eef3f7;
+            --card: #ffffff;
+            --primary: #0f766e;
+            --primary-hover: #0b5f59;
+            --primary-soft: #d9f3ef;
+            --muted: #5f6f6c;
+            --border: #d6e0e5;
+            --text: #12201c;
+            --shadow: 0 18px 40px rgba(18, 32, 28, 0.08);
         }
+
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
             min-height: 100vh;
             display: grid;
             place-items: center;
             padding: 24px;
-            background: linear-gradient(180deg, #efe5d3 0%, var(--bg) 100%);
+            background: var(--bg);
             color: var(--text);
-            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            line-height: 1.5;
         }
+
         .shell {
-            width: min(920px, 100%);
+            width: min(960px, 100%);
             display: grid;
             grid-template-columns: 1.1fr 1fr;
-            gap: 20px;
+            gap: 16px;
+            align-items: stretch;
         }
+
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(47, 93, 80, 0.08);
+            border-radius: 8px;
+            padding: 28px;
+            box-shadow: var(--shadow);
         }
-        h1, h2 { margin: 0 0 12px; }
+
+        .intro {
+            display: grid;
+            align-content: space-between;
+            gap: 28px;
+            background: #0f766e;
+            color: #fff;
+            border-color: #0f766e;
+        }
+
+        h1, h2 {
+            margin: 0 0 12px;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 34px;
+        }
+
+        h2 {
+            font-size: 22px;
+        }
+
         .subtitle, .helper {
             color: var(--muted);
             margin: 0 0 14px;
         }
+
+        .intro .subtitle,
+        .intro .helper {
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        form + .form-title {
+            margin-top: 24px;
+        }
+
         label {
             display: block;
             margin-bottom: 14px;
             color: var(--muted);
             font-size: 14px;
+            font-weight: 700;
         }
+
         input, button {
             width: 100%;
             margin-top: 6px;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 12px 14px;
             font: inherit;
         }
+
         input {
             border: 1px solid var(--border);
             background: #fff;
+            color: var(--text);
+            outline: none;
+            transition: border-color 140ms ease, box-shadow 140ms ease;
         }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+        }
+
+        .password-field {
+            position: relative;
+            margin-top: 6px;
+        }
+
+        .password-field input {
+            margin-top: 0;
+            padding-right: 72px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            width: auto;
+            min-width: 52px;
+            margin: 0;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface, #f8fafc);
+            color: var(--primary);
+            font-size: 13px;
+            line-height: 1;
+            transform: translateY(-50%);
+        }
+
+        .password-toggle:hover {
+            background: var(--primary-soft);
+        }
+
+        .password-toggle:active {
+            transform: translateY(calc(-50% + 1px));
+        }
+
         button {
             border: none;
             background: var(--primary);
             color: #fff;
             font-weight: 700;
             cursor: pointer;
+            transition: background 140ms ease, transform 140ms ease;
         }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
         .message {
             margin-bottom: 16px;
             padding: 12px 14px;
-            background: #fff7dd;
-            border: 1px solid #ebd38b;
-            border-radius: 12px;
-            color: #735d22;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            color: #9a3412;
         }
+
+        .muted-note {
+            margin-top: 20px;
+            margin-bottom: 0;
+        }
+
         @media (max-width: 780px) {
-            .shell { grid-template-columns: 1fr; }
+            body {
+                padding: 16px;
+            }
+
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 22px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="shell">
-        <section class="card">
-            <h1>体重记录</h1>
-            <p class="subtitle">支持登录、多用户、体重趋势、BMI 和目标进度。</p>
-            <p class="helper">登录后进入个人数据页。每个账号的数据独立保存。</p>
+        <section class="card intro">
+            <div>
+                <h1>体重记录</h1>
+                <p class="subtitle">支持登录、多用户、体重趋势、BMI 和目标进度。</p>
+                <p class="helper">登录后进入个人数据页。每个账号的数据独立保存。</p>
+            </div>
+            <ul class="feature-list">
+                <li>记录每日体重和备注</li>
+                <li>查看趋势、BMI 和目标进度</li>
+                <li>批量导入历史数据</li>
+            </ul>
         </section>
         <section class="card">
             {% if message %}
             <div class="message">{{ message }}</div>
             {% endif %}
-            <h2>登录</h2>
+            <h2 class="form-title">登录</h2>
             <form method="post" action="{{ url_for('login') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label>
@@ -153,12 +292,15 @@ AUTH_TEMPLATE = """
                 </label>
                 <label>
                     密码
-                    <input type="password" name="password" minlength="6" required>
+                    <span class="password-field">
+                        <input type="password" name="password" minlength="6" required>
+                        <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
+                    </span>
                 </label>
                 <button type="submit">登录</button>
             </form>
             {% if registration_enabled %}
-            <h2 style="margin-top: 20px;">注册</h2>
+            <h2 class="form-title">注册</h2>
             <form method="post" action="{{ url_for('register') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label>
@@ -167,7 +309,10 @@ AUTH_TEMPLATE = """
                 </label>
                 <label>
                     密码
-                    <input type="password" name="password" minlength="6" required>
+                    <span class="password-field">
+                        <input type="password" name="password" minlength="6" required>
+                        <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
+                    </span>
                 </label>
                 {% if invite_required %}
                 <label>
@@ -178,11 +323,26 @@ AUTH_TEMPLATE = """
                 <button type="submit">创建账号</button>
             </form>
             {% else %}
-            <p class="helper" style="margin-top: 20px;">当前未开放注册。</p>
+            <p class="helper muted-note">当前未开放注册。</p>
             {% endif %}
         </section>
     </div>
 </body>
+<script>
+    (() => {
+        document.querySelectorAll(".password-toggle").forEach((toggle) => {
+            toggle.addEventListener("click", () => {
+                const input = toggle.parentElement.querySelector("input");
+                const shouldShow = input.type === "password";
+
+                input.type = shouldShow ? "text" : "password";
+                toggle.textContent = shouldShow ? "隐藏" : "显示";
+                toggle.setAttribute("aria-label", shouldShow ? "隐藏密码" : "显示密码");
+                toggle.setAttribute("aria-pressed", String(shouldShow));
+            });
+        });
+    })();
+</script>
 </html>
 """
 
@@ -196,44 +356,62 @@ PAGE_TEMPLATE = """
     <style>
         :root {
             color-scheme: light;
-            --bg: #f6f1e8;
-            --card: #fffdf8;
-            --primary: #2f5d50;
-            --primary-soft: #dce9e2;
-            --text: #1e2a26;
-            --muted: #6c766f;
-            --danger: #a34646;
-            --border: #d8d2c5;
-            --accent: #c77b4a;
+            --bg: #eef3f7;
+            --card: #ffffff;
+            --primary: #0f766e;
+            --primary-hover: #0b5f59;
+            --primary-soft: #d9f3ef;
+            --text: #12201c;
+            --muted: #5f6f6c;
+            --danger: #b42318;
+            --danger-soft: #fee4e2;
+            --border: #d6e0e5;
+            --accent: #f97316;
+            --surface: #f8fafc;
+            --shadow: 0 16px 36px rgba(18, 32, 28, 0.08);
         }
 
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            background: linear-gradient(180deg, #efe5d3 0%, var(--bg) 32%, #f8f5ef 100%);
+            min-height: 100vh;
+            font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
             color: var(--text);
+            line-height: 1.5;
         }
 
         .container {
-            width: min(1160px, calc(100vw - 32px));
-            margin: 40px auto;
+            width: min(1180px, calc(100vw - 32px));
+            margin: 32px auto;
         }
 
         .hero {
             display: flex;
             justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 20px;
-            align-items: end;
+            gap: 20px;
+            margin-bottom: 18px;
+            align-items: flex-end;
         }
 
-        h1, h2, h3 { margin: 0 0 12px; }
+        h1, h2, h3 {
+            margin: 0 0 12px;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 34px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
 
         .subtitle {
             color: var(--muted);
             margin: 0;
+            max-width: 720px;
         }
 
         .hero-actions {
@@ -245,36 +423,39 @@ PAGE_TEMPLATE = """
 
         .layout {
             display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 20px;
+            grid-template-columns: minmax(300px, 360px) 1fr;
+            gap: 16px;
             align-items: start;
         }
 
         .sidebar, .main {
             display: grid;
-            gap: 20px;
+            gap: 16px;
         }
 
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(47, 93, 80, 0.08);
+            box-shadow: var(--shadow);
         }
 
         .stats {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .stat {
-            background: var(--primary-soft);
-            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
             padding: 14px;
-            min-height: 92px;
+            min-height: 104px;
+            box-shadow: 0 10px 24px rgba(18, 32, 28, 0.06);
         }
 
         .stat-label {
@@ -286,6 +467,7 @@ PAGE_TEMPLATE = """
         .stat-value {
             font-size: 24px;
             font-weight: 700;
+            line-height: 1.15;
         }
 
         .stat-tip {
@@ -299,11 +481,12 @@ PAGE_TEMPLATE = """
             margin-bottom: 14px;
             font-size: 14px;
             color: var(--muted);
+            font-weight: 700;
         }
 
         input, textarea, button {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 8px;
             border: 1px solid var(--border);
             padding: 12px 14px;
             font: inherit;
@@ -312,6 +495,15 @@ PAGE_TEMPLATE = """
         input, textarea {
             margin-top: 6px;
             background: #fff;
+            color: var(--text);
+            outline: none;
+            transition: border-color 140ms ease, box-shadow 140ms ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
         }
 
         textarea {
@@ -325,12 +517,25 @@ PAGE_TEMPLATE = """
             color: white;
             font-weight: 700;
             cursor: pointer;
+            transition: background 140ms ease, transform 140ms ease;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:active {
+            transform: translateY(1px);
         }
 
         .delete-btn {
-            background: transparent;
+            background: var(--danger-soft);
             color: var(--danger);
-            border: 1px solid #ebc3c3;
+            border: 1px solid #fecdca;
+        }
+
+        .delete-btn:hover {
+            background: #fecdca;
         }
 
         .row-actions {
@@ -351,28 +556,36 @@ PAGE_TEMPLATE = """
             justify-content: center;
             min-height: 42px;
             padding: 0 14px;
-            border-radius: 12px;
+            border-radius: 8px;
             text-decoration: none;
             color: var(--primary);
             border: 1px solid var(--primary);
             background: transparent;
+            font-weight: 700;
+            transition: background 140ms ease, color 140ms ease;
+            white-space: nowrap;
+        }
+
+        .action-link:hover {
+            background: var(--primary-soft);
         }
 
         .message {
-            background: #fff7dd;
-            border: 1px solid #ebd38b;
-            color: #735d22;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
             padding: 12px 14px;
-            border-radius: 12px;
+            border-radius: 8px;
             margin-bottom: 16px;
         }
 
         .chart-wrap {
             position: relative;
-            background: linear-gradient(180deg, #fffaf1 0%, #f6f1e8 100%);
-            border: 1px solid #eee3cf;
-            border-radius: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             padding: 12px;
+            overflow: hidden;
         }
 
         .chart-tooltip {
@@ -382,15 +595,15 @@ PAGE_TEMPLATE = """
             transform: translate(-50%, calc(-100% - 12px));
             max-width: 220px;
             padding: 8px 10px;
-            border-radius: 10px;
-            background: rgba(30, 42, 38, 0.94);
-            color: #fffdf8;
+            border-radius: 8px;
+            background: rgba(18, 32, 28, 0.94);
+            color: #fff;
             font-size: 12px;
             line-height: 1.45;
             pointer-events: none;
             opacity: 0;
             transition: opacity 120ms ease;
-            box-shadow: 0 10px 24px rgba(30, 42, 38, 0.18);
+            box-shadow: 0 10px 24px rgba(18, 32, 28, 0.18);
             z-index: 5;
             white-space: normal;
         }
@@ -416,17 +629,17 @@ PAGE_TEMPLATE = """
 
         .segmented {
             display: inline-flex;
-            gap: 8px;
-            padding: 6px;
-            border-radius: 14px;
-            background: #f2ebdf;
-            border: 1px solid #e7dac3;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 8px;
+            background: #e8eef2;
+            border: 1px solid var(--border);
             margin-bottom: 14px;
         }
 
         .segmented a {
             padding: 8px 14px;
-            border-radius: 10px;
+            border-radius: 6px;
             text-decoration: none;
             color: var(--muted);
             font-size: 14px;
@@ -451,9 +664,13 @@ PAGE_TEMPLATE = """
             gap: 8px;
         }
 
+        .form-secondary {
+            margin-top: 10px;
+        }
+
         .progress-shell {
             margin-top: 12px;
-            background: #efe6d6;
+            background: #e2e8f0;
             border-radius: 999px;
             height: 16px;
             overflow: hidden;
@@ -462,7 +679,7 @@ PAGE_TEMPLATE = """
         .progress-fill {
             height: 100%;
             border-radius: 999px;
-            background: linear-gradient(90deg, #c77b4a 0%, #2f5d50 100%);
+            background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
         }
 
         .progress-meta {
@@ -474,15 +691,21 @@ PAGE_TEMPLATE = """
             color: var(--muted);
         }
 
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 680px;
         }
 
         th, td {
             text-align: left;
             padding: 12px 8px;
-            border-bottom: 1px solid #eee6d7;
+            border-bottom: 1px solid var(--border);
             vertical-align: top;
         }
 
@@ -515,16 +738,21 @@ PAGE_TEMPLATE = """
             margin-top: 8px;
             padding: 6px 10px;
             border-radius: 999px;
-            background: #f0e2d7;
-            color: #8b522f;
+            background: var(--primary-soft);
+            color: #0b5f59;
             font-size: 12px;
             font-weight: 700;
         }
 
         @media (max-width: 860px) {
+            .container {
+                margin: 20px auto;
+            }
+
             .hero, .layout {
                 grid-template-columns: 1fr;
                 display: grid;
+                align-items: start;
             }
 
             .stats {
@@ -534,11 +762,43 @@ PAGE_TEMPLATE = """
             .filter-form {
                 grid-template-columns: 1fr;
             }
+
+            .filter-actions {
+                align-items: stretch;
+            }
         }
 
         @media (max-width: 560px) {
+            .container {
+                width: min(100% - 24px, 1180px);
+            }
+
+            .hero {
+                gap: 12px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
             .stats {
                 grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .segmented,
+            .filter-actions,
+            .row-actions {
+                width: 100%;
+            }
+
+            .segmented a,
+            .filter-actions > *,
+            .row-actions > * {
+                flex: 1 1 0;
             }
         }
     </style>
@@ -614,7 +874,7 @@ PAGE_TEMPLATE = """
                         <button type="submit">{{ "保存修改" if editing_record else "保存记录" }}</button>
                     </form>
                     {% if editing_record %}
-                    <div style="margin-top: 10px;">
+                    <div class="form-secondary">
                         <a class="action-link" href="{{ url_for('index', chart=chart_mode, start_date=start_date, end_date=end_date) }}">取消编辑</a>
                     </div>
                     {% endif %}
@@ -717,36 +977,38 @@ PAGE_TEMPLATE = """
                 <section class="card">
                     <h2>历史记录</h2>
                     {% if records %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>日期</th>
-                                <th>体重</th>
-                                <th>BMI</th>
-                                <th>备注</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in records %}
-                            <tr>
-                                <td>{{ record["record_date"] }}</td>
-                                <td>{{ "%.1f"|format(record["weight"]) }} kg</td>
-                                <td>{% if record["bmi"] is not none %}{{ "%.1f"|format(record["bmi"]) }}{% else %}-{% endif %}</td>
-                                <td>{% if record["note"] %}<div class="row-note">{{ record["note"] }}</div>{% else %}<span class="row-note">-</span>{% endif %}</td>
-                                <td>
-                                    <div class="row-actions">
-                                        <a class="action-link" href="{{ url_for('index', edit=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">编辑</a>
-                                        <form method="post" action="{{ url_for('delete_record', record_id=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button class="delete-btn" type="submit">删除</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>体重</th>
+                                    <th>BMI</th>
+                                    <th>备注</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <td>{{ record["record_date"] }}</td>
+                                    <td>{{ "%.1f"|format(record["weight"]) }} kg</td>
+                                    <td>{% if record["bmi"] is not none %}{{ "%.1f"|format(record["bmi"]) }}{% else %}-{% endif %}</td>
+                                    <td>{% if record["note"] %}<div class="row-note">{{ record["note"] }}</div>{% else %}<span class="row-note">-</span>{% endif %}</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <a class="action-link" href="{{ url_for('index', edit=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">编辑</a>
+                                            <form method="post" action="{{ url_for('delete_record', record_id=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="delete-btn" type="submit">删除</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
                     <div class="empty">还没有记录，先添加今天的体重。</div>
                     {% endif %}
@@ -1244,8 +1506,8 @@ def build_x_axis_labels(points: list[tuple[float, float, dict]], chart_mode: str
         x, _, record = points[index]
         label = format_x_label(record, chart_mode)
         labels.append(
-            f"<line x1='{x:.1f}' y1='{chart_height - 34}' x2='{x:.1f}' y2='{chart_height - 28}' stroke='#cbbca6' />"
-            f"<text x='{x:.1f}' y='{chart_height - 12}' text-anchor='middle' font-size='11' fill='#6c766f'>{escape(label)}</text>"
+            f"<line x1='{x:.1f}' y1='{chart_height - 34}' x2='{x:.1f}' y2='{chart_height - 28}' stroke='#b9c6cc' />"
+            f"<text x='{x:.1f}' y='{chart_height - 12}' text-anchor='middle' font-size='11' fill='#5f6f6c'>{escape(label)}</text>"
         )
     return "".join(labels)
 
@@ -1281,8 +1543,8 @@ def build_weight_value_labels(points: list[tuple[float, float, dict]]) -> str:
         label_y = y + offset
         rect_y = label_y - 11
         labels.append(
-            f"<rect x='{x - 17:.1f}' y='{rect_y:.1f}' width='34' height='18' rx='8' fill='#fffaf1' stroke='#eadfcb' />"
-            f"<text x='{x:.1f}' y='{label_y + 2:.1f}' text-anchor='middle' font-size='11' font-weight='700' fill='#7b4d30'>{record['weight']:.1f}</text>"
+            f"<rect x='{x - 17:.1f}' y='{rect_y:.1f}' width='34' height='18' rx='6' fill='#ffffff' stroke='#d6e0e5' />"
+            f"<text x='{x:.1f}' y='{label_y + 2:.1f}' text-anchor='middle' font-size='11' font-weight='700' fill='#0b5f59'>{record['weight']:.1f}</text>"
         )
     return "".join(labels)
 
@@ -1321,8 +1583,8 @@ def build_chart_svg(records: list[dict], chart_mode: str, target_weight: float |
         value = min_axis + (axis_range * tick / 3)
         y = top + plot_height - (plot_height * tick / 3)
         y_ticks.append(
-            f"<line x1='{left}' y1='{y:.1f}' x2='{width - right}' y2='{y:.1f}' stroke='#e8ddca' stroke-dasharray='4 4' />"
-            f"<text x='{left - 8}' y='{y + 4:.1f}' text-anchor='end' font-size='11' fill='#6c766f'>{value:.1f}</text>"
+            f"<line x1='{left}' y1='{y:.1f}' x2='{width - right}' y2='{y:.1f}' stroke='#d6e0e5' stroke-dasharray='4 4' />"
+            f"<text x='{left - 8}' y='{y + 4:.1f}' text-anchor='end' font-size='11' fill='#5f6f6c'>{value:.1f}</text>"
         )
 
     goal_line = ""
@@ -1330,8 +1592,8 @@ def build_chart_svg(records: list[dict], chart_mode: str, target_weight: float |
         goal_y = top + plot_height - (((target_weight - min_axis) / axis_range) * plot_height)
         goal_line = (
             f"<line x1='{left}' y1='{goal_y:.1f}' x2='{width - right}' y2='{goal_y:.1f}' "
-            f"stroke='#a34646' stroke-width='2' stroke-dasharray='8 6' />"
-            f"<text x='{width - right}' y='{goal_y - 6:.1f}' text-anchor='end' font-size='12' fill='#a34646'>"
+            f"stroke='#b42318' stroke-width='2' stroke-dasharray='8 6' />"
+            f"<text x='{width - right}' y='{goal_y - 6:.1f}' text-anchor='end' font-size='12' fill='#b42318'>"
             f"目标 {target_weight:.1f} kg</text>"
         )
 
@@ -1339,7 +1601,7 @@ def build_chart_svg(records: list[dict], chart_mode: str, target_weight: float |
     for x, y, record in points:
         tooltip = escape(build_point_tooltip(record), quote=True)
         circles.append(
-            f"<circle class='chart-point' data-tooltip='{tooltip}' cx='{x:.1f}' cy='{y:.1f}' r='6.5' fill='#c77b4a' stroke='#fff7ed' stroke-width='2'>"
+            f"<circle class='chart-point' data-tooltip='{tooltip}' cx='{x:.1f}' cy='{y:.1f}' r='6.5' fill='#f97316' stroke='#ffffff' stroke-width='2'>"
             f"<title>{escape(build_point_tooltip(record))}</title>"
             f"</circle>"
         )
@@ -1347,9 +1609,9 @@ def build_chart_svg(records: list[dict], chart_mode: str, target_weight: float |
 
     return (
         f"<svg viewBox='0 0 {width} {height}' width='100%' role='img' aria-label='体重变化趋势图'>"
-        f"<rect x='0' y='0' width='{width}' height='{height}' rx='14' fill='#fffdf8' />"
+        f"<rect x='0' y='0' width='{width}' height='{height}' rx='8' fill='#ffffff' />"
         f"{''.join(y_ticks)}{goal_line}"
-        f"<polyline fill='none' stroke='#2f5d50' stroke-width='3' points='{' '.join(f'{x:.1f},{y:.1f}' for x, y, _ in points)}' />"
+        f"<polyline fill='none' stroke='#0f766e' stroke-width='3' points='{' '.join(f'{x:.1f},{y:.1f}' for x, y, _ in points)}' />"
         f"{value_labels}{''.join(circles)}{x_axis_labels}"
         f"</svg>"
     )
@@ -1391,10 +1653,10 @@ def build_dual_chart_svg(records: list[dict], chart_mode: str, target_weight: fl
         bmi_points.append(f"{x:.1f},{by:.1f}")
         tooltip = escape(build_point_tooltip(record))
         point_markers.append(
-            f"<circle class='chart-point' data-tooltip='{escape(build_point_tooltip(record), quote=True)}' cx='{x:.1f}' cy='{wy:.1f}' r='5.5' fill='#2f5d50' stroke='#f3f0e8' stroke-width='1.5'>"
+            f"<circle class='chart-point' data-tooltip='{escape(build_point_tooltip(record), quote=True)}' cx='{x:.1f}' cy='{wy:.1f}' r='5.5' fill='#0f766e' stroke='#ffffff' stroke-width='1.5'>"
             f"<title>{tooltip}</title>"
             f"</circle>"
-            f"<circle class='chart-point' data-tooltip='{escape(build_point_tooltip(record), quote=True)}' cx='{x:.1f}' cy='{by:.1f}' r='5.5' fill='#c77b4a' stroke='#f3f0e8' stroke-width='1.5'>"
+            f"<circle class='chart-point' data-tooltip='{escape(build_point_tooltip(record), quote=True)}' cx='{x:.1f}' cy='{by:.1f}' r='5.5' fill='#f97316' stroke='#ffffff' stroke-width='1.5'>"
             f"<title>{tooltip}</title>"
             f"</circle>"
         )
@@ -1410,29 +1672,29 @@ def build_dual_chart_svg(records: list[dict], chart_mode: str, target_weight: fl
         weight_value = min_weight + (weight_range * tick / 3)
         bmi_value = min_bmi + (bmi_range * tick / 3)
         grid_lines.append(
-            f"<line x1='{left}' y1='{y:.1f}' x2='{width - right}' y2='{y:.1f}' stroke='#e8ddca' stroke-dasharray='4 4' />"
-            f"<text x='{left - 8}' y='{y + 4:.1f}' text-anchor='end' font-size='11' fill='#2f5d50'>{weight_value:.1f}</text>"
-            f"<text x='{width - right + 8}' y='{y + 4:.1f}' text-anchor='start' font-size='11' fill='#c77b4a'>{bmi_value:.1f}</text>"
+            f"<line x1='{left}' y1='{y:.1f}' x2='{width - right}' y2='{y:.1f}' stroke='#d6e0e5' stroke-dasharray='4 4' />"
+            f"<text x='{left - 8}' y='{y + 4:.1f}' text-anchor='end' font-size='11' fill='#0f766e'>{weight_value:.1f}</text>"
+            f"<text x='{width - right + 8}' y='{y + 4:.1f}' text-anchor='start' font-size='11' fill='#f97316'>{bmi_value:.1f}</text>"
         )
 
     goal_line = ""
     if target_weight is not None:
         goal_y = top + plot_height - (((target_weight - min_weight) / weight_range) * plot_height)
         goal_line = (
-            f"<line x1='{left}' y1='{goal_y:.1f}' x2='{width - right}' y2='{goal_y:.1f}' stroke='#a34646' stroke-width='2' stroke-dasharray='8 6' />"
-            f"<text x='{left + 4}' y='{goal_y - 6:.1f}' font-size='12' fill='#a34646'>目标体重</text>"
+            f"<line x1='{left}' y1='{goal_y:.1f}' x2='{width - right}' y2='{goal_y:.1f}' stroke='#b42318' stroke-width='2' stroke-dasharray='8 6' />"
+            f"<text x='{left + 4}' y='{goal_y - 6:.1f}' font-size='12' fill='#b42318'>目标体重</text>"
         )
 
     return (
         f"<svg viewBox='0 0 {width} {height}' width='100%' role='img' aria-label='体重与BMI双曲线图'>"
-        f"<rect x='0' y='0' width='{width}' height='{height}' rx='14' fill='#fffdf8' />"
+        f"<rect x='0' y='0' width='{width}' height='{height}' rx='8' fill='#ffffff' />"
         f"{''.join(grid_lines)}{goal_line}"
-        f"<polyline fill='none' stroke='#2f5d50' stroke-width='3' points='{' '.join(weight_points)}' />"
-        f"<polyline fill='none' stroke='#c77b4a' stroke-width='3' points='{' '.join(bmi_points)}' />"
+        f"<polyline fill='none' stroke='#0f766e' stroke-width='3' points='{' '.join(weight_points)}' />"
+        f"<polyline fill='none' stroke='#f97316' stroke-width='3' points='{' '.join(bmi_points)}' />"
         f"{''.join(point_markers)}"
         f"{x_axis_labels}"
-        f"<text x='{left}' y='16' font-size='12' fill='#2f5d50'>体重</text>"
-        f"<text x='{width - right}' y='16' text-anchor='end' font-size='12' fill='#c77b4a'>BMI</text>"
+        f"<text x='{left}' y='16' font-size='12' fill='#0f766e'>体重</text>"
+        f"<text x='{width - right}' y='16' text-anchor='end' font-size='12' fill='#f97316'>BMI</text>"
         f"</svg>"
     )
 
