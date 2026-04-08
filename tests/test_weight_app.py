@@ -4,7 +4,10 @@ import re
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
+
+from werkzeug.security import check_password_hash
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
@@ -79,6 +82,12 @@ class WeightAppTestCase(unittest.TestCase):
         response = self.client.post("/login", data={"username": "alice", "password": "secret123"})
         self.assertEqual(response.status_code, 400)
 
+    def test_auth_page_does_not_link_to_admin_page(self):
+        response = self.client.get("/auth")
+        page = response.get_data(as_text=True)
+        self.assertNotIn("/invites", page)
+        self.assertNotIn("生成邀请码", page)
+
     def test_registration_requires_invite_code(self):
         response = self.register("alice", invite_code="wrong")
         self.assertIn("邀请码错误或已被使用", response.get_data(as_text=True))
@@ -105,6 +114,49 @@ class WeightAppTestCase(unittest.TestCase):
 
         response = self.register("alice", invite_code=match.group(1))
         self.assertIn("注册成功", response.get_data(as_text=True))
+
+    def test_admin_page_lists_users_and_updates_one_password(self):
+        self.register("alice")
+        response = self.client.get("/invites")
+        response = self.client.post(
+            "/admin/authorize",
+            data={"csrf_token": self.csrf_from(response), "admin_key": "admin-key"},
+            follow_redirects=True,
+        )
+        page = response.get_data(as_text=True)
+        self.assertIn("账号列表", page)
+        self.assertIn("alice", page)
+
+        response = self.client.post(
+            "/admin/users/1/password",
+            data={"csrf_token": self.csrf_from(response), "admin_key": "admin-key", "password": "new-secret"},
+            follow_redirects=True,
+        )
+        self.assertIn("alice 的密码已修改", response.get_data(as_text=True))
+
+        with closing(self.weight_app.get_connection()) as connection:
+            row = connection.execute(
+                "SELECT password_hash FROM users WHERE username = ?",
+                ("alice",),
+            ).fetchone()
+        self.assertTrue(check_password_hash(row["password_hash"], "new-secret"))
+
+    def test_admin_page_updates_all_passwords(self):
+        self.register("alice")
+        self.register("bob")
+        response = self.client.get("/invites")
+        response = self.client.post(
+            "/admin/users/passwords",
+            data={"csrf_token": self.csrf_from(response), "admin_key": "admin-key", "password": "shared-secret"},
+            follow_redirects=True,
+        )
+        self.assertIn("已修改 2 个账号的密码", response.get_data(as_text=True))
+
+        with closing(self.weight_app.get_connection()) as connection:
+            rows = connection.execute("SELECT password_hash FROM users ORDER BY id").fetchall()
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertTrue(check_password_hash(row["password_hash"], "shared-secret"))
 
     def test_registration_can_be_disabled(self):
         self.weight_app.app.config["REGISTRATION_ENABLED"] = False

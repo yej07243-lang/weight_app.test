@@ -292,7 +292,6 @@ AUTH_TEMPLATE = """
                 <li>记录每日体重和备注</li>
                 <li>查看趋势、BMI 和目标进度</li>
                 <li>批量导入历史数据</li>
-                <li><a class="inline-link" href="{{ url_for('invite_codes_page') }}">生成邀请码</a></li>
             </ul>
         </section>
         <section class="card">
@@ -366,7 +365,7 @@ INVITE_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>邀请码生成器</title>
+    <title>账号管理</title>
     <style>
         :root {
             color-scheme: light;
@@ -379,6 +378,7 @@ INVITE_TEMPLATE = """
             --border: #d6e0e5;
             --text: #12201c;
             --shadow: 0 18px 40px rgba(18, 32, 28, 0.08);
+            --danger: #b42318;
         }
 
         * { box-sizing: border-box; }
@@ -386,8 +386,8 @@ INVITE_TEMPLATE = """
         body {
             margin: 0;
             min-height: 100vh;
-            display: grid;
-            place-items: center;
+            display: flex;
+            justify-content: center;
             padding: 24px;
             background: var(--bg);
             color: var(--text);
@@ -396,7 +396,7 @@ INVITE_TEMPLATE = """
         }
 
         .card {
-            width: min(620px, 100%);
+            width: min(1120px, 100%);
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -410,9 +410,30 @@ INVITE_TEMPLATE = """
             line-height: 1.2;
         }
 
+        h2 {
+            margin: 0 0 12px;
+            font-size: 20px;
+            line-height: 1.2;
+        }
+
         p {
             margin: 0 0 16px;
             color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .panel {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f8fafc;
         }
 
         label {
@@ -423,7 +444,7 @@ INVITE_TEMPLATE = """
             font-weight: 700;
         }
 
-        input, button {
+        input, button, select {
             width: 100%;
             margin-top: 6px;
             border-radius: 8px;
@@ -431,7 +452,7 @@ INVITE_TEMPLATE = """
             font: inherit;
         }
 
-        input {
+        input, select {
             border: 1px solid var(--border);
             color: var(--text);
             outline: none;
@@ -463,6 +484,12 @@ INVITE_TEMPLATE = """
             color: #9a3412;
         }
 
+        .success {
+            background: #ecfdf3;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
         .code-box {
             display: grid;
             gap: 8px;
@@ -488,6 +515,47 @@ INVITE_TEMPLATE = """
             margin-top: 18px;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .inline-form {
+            display: grid;
+            gap: 8px;
+        }
+
+        .inline-form input {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .danger-button {
+            background: var(--danger);
+        }
+
+        .danger-button:hover {
+            background: #8f1d14;
+        }
+
         .action-link {
             display: inline-flex;
             align-items: center;
@@ -504,15 +572,29 @@ INVITE_TEMPLATE = """
         .action-link:hover {
             background: var(--primary-soft);
         }
+
+        @media (max-width: 800px) {
+            body {
+                padding: 14px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <main class="card">
-        <h1>邀请码生成器</h1>
-        <p>生成的邀请码只能成功注册一个账号。注册成功后，该邀请码会自动失效。</p>
+        <h1>账号管理</h1>
+        <p>生成一次性邀请码，查看账号，并修改账号密码。</p>
 
         {% if message %}
-        <div class="message">{{ message }}</div>
+        <div class="message {% if success %}success{% endif %}">{{ message }}</div>
         {% endif %}
 
         {% if invite_code %}
@@ -523,18 +605,115 @@ INVITE_TEMPLATE = """
         </div>
         {% endif %}
 
-        <form method="post" action="{{ url_for('create_invite_code_route') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% if admin_key_required %}
-            <label>
-                管理密钥
-                <input name="admin_key" type="password" value="{{ admin_key_value }}" required>
-            </label>
+        {% if not admin_authorized %}
+        <section class="panel">
+            <h2>验证管理权限</h2>
+            <form method="post" action="{{ url_for('admin_authorize_route') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if admin_key_required %}
+                <label>
+                    管理密钥
+                    <input name="admin_key" type="password" value="{{ admin_key_value }}" required>
+                </label>
+                {% else %}
+                <p>当前未配置 `INVITE_ADMIN_KEY`，请先登录后再管理账号。</p>
+                {% endif %}
+                <button type="submit">进入管理</button>
+            </form>
+        </section>
+        {% else %}
+        <div class="grid">
+            <section class="panel">
+                <h2>邀请码</h2>
+                <p>生成的邀请码只能注册一个账号，注册成功后自动失效。</p>
+                <form method="post" action="{{ url_for('create_invite_code_route') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if admin_key_required %}
+                    <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
+                    {% endif %}
+                    <button type="submit">生成一个邀请码</button>
+                </form>
+
+                {% if invite_rows %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>邀请码</th>
+                            <th>状态</th>
+                            <th>使用者</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in invite_rows %}
+                        <tr>
+                            <td>{{ row.code }}</td>
+                            <td>{% if row.used_at %}已使用{% else %}未使用{% endif %}</td>
+                            <td>{{ row.used_by or "-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>还没有邀请码。</p>
+                {% endif %}
+            </section>
+
+            <section class="panel">
+                <h2>所有账号密码</h2>
+                <p>把所有账号统一改成一个新密码。</p>
+                <form method="post" action="{{ url_for('set_all_user_passwords_route') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if admin_key_required %}
+                    <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
+                    {% endif %}
+                    <label>
+                        新密码
+                        <input name="password" type="password" minlength="6" required>
+                    </label>
+                    <button class="danger-button" type="submit">修改所有账号密码</button>
+                </form>
+            </section>
+        </div>
+
+        <section class="panel" style="margin-top: 16px;">
+            <h2>账号列表</h2>
+            {% if user_rows %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>注册时间</th>
+                        <th>体重记录</th>
+                        <th>修改密码</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in user_rows %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.created_at }}</td>
+                        <td>{{ user.record_count }}</td>
+                        <td>
+                            <form class="inline-form" method="post" action="{{ url_for('set_user_password_route', user_id=user.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {% if admin_key_required %}
+                                <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
+                                {% endif %}
+                                <input name="password" type="password" minlength="6" placeholder="新密码" required>
+                                <button type="submit">保存</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
-            <p>当前未配置 `INVITE_ADMIN_KEY`，生成器仅允许已登录用户使用。</p>
+            <p>还没有账号。</p>
             {% endif %}
-            <button type="submit">生成一个邀请码</button>
-        </form>
+        </section>
+        {% endif %}
 
         <div class="actions">
             <a class="action-link" href="{{ url_for('auth_page') }}">返回登录页</a>
@@ -2004,14 +2183,110 @@ def invite_admin_key_matches(submitted_key: str) -> bool:
     return bool(submitted_key) and secrets.compare_digest(admin_key, submitted_key)
 
 
-def render_invite_codes_page(message: str = "", invite_code: str = "", admin_key_value: str = ""):
+def fetch_admin_users() -> list[dict]:
+    with closing(get_connection()) as connection:
+        rows = connection.execute(
+            """
+            SELECT users.id, users.username, users.created_at, COUNT(weight_records.id) AS record_count
+            FROM users
+            LEFT JOIN weight_records ON weight_records.user_id = users.id
+            GROUP BY users.id
+            ORDER BY users.id
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def fetch_admin_invite_codes(limit: int = 50) -> list[dict]:
+    with closing(get_connection()) as connection:
+        rows = connection.execute(
+            """
+            SELECT invite_codes.code, invite_codes.created_at, invite_codes.used_at, users.username AS used_by
+            FROM invite_codes
+            LEFT JOIN users ON invite_codes.used_by_user_id = users.id
+            ORDER BY invite_codes.id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def admin_page_data(admin_authorized: bool) -> tuple[list[dict], list[dict]]:
+    if not admin_authorized:
+        return [], []
+    return fetch_admin_users(), fetch_admin_invite_codes()
+
+
+def set_user_password(user_id: int, password: str) -> tuple[bool, str]:
+    with closing(get_connection()) as connection:
+        row = connection.execute(
+            "SELECT id, username FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return False, "账号不存在。"
+
+        ok, message = validate_user_credentials(row["username"], password)
+        if not ok:
+            return False, message
+
+        connection.execute(
+            """
+            UPDATE users
+            SET password_hash = ?
+            WHERE id = ?
+            """,
+            (generate_password_hash(password), user_id),
+        )
+        connection.commit()
+    return True, f"{row['username']} 的密码已修改。"
+
+
+def set_all_user_passwords(password: str) -> tuple[bool, str]:
+    with closing(get_connection()) as connection:
+        users = connection.execute("SELECT id, username FROM users ORDER BY id").fetchall()
+        if not users:
+            return False, "还没有账号。"
+
+        for user in users:
+            ok, message = validate_user_credentials(user["username"], password)
+            if not ok:
+                return False, message
+
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            """
+            UPDATE users
+            SET password_hash = ?
+            """,
+            (generate_password_hash(password),),
+        )
+        connection.commit()
+    return True, f"已修改 {len(users)} 个账号的密码。"
+
+
+def render_invite_codes_page(
+    message: str = "",
+    invite_code: str = "",
+    admin_key_value: str = "",
+    admin_authorized: bool | None = None,
+    success: bool = False,
+):
+    if admin_authorized is None:
+        admin_authorized = invite_admin_key_matches(admin_key_value)
+    user_rows, invite_rows = admin_page_data(admin_authorized)
     return render_template_string(
         INVITE_TEMPLATE,
         message=message,
         invite_code=invite_code,
+        success=success,
+        admin_authorized=admin_authorized,
         admin_key_required=bool(app.config["INVITE_ADMIN_KEY"].strip()),
         admin_key_value=admin_key_value,
         current_user_id=get_current_user_id(),
+        user_rows=user_rows,
+        invite_rows=invite_rows,
     )
 
 
@@ -2033,6 +2308,24 @@ def invite_codes_page():
     return render_invite_codes_page(message=request.args.get("message", ""))
 
 
+@app.post("/admin/authorize")
+def admin_authorize_route():
+    init_db()
+    admin_key = request.form.get("admin_key", "")
+    if not invite_admin_key_matches(admin_key):
+        return render_invite_codes_page(
+            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            admin_key_value=admin_key,
+            admin_authorized=False,
+        )
+    return render_invite_codes_page(
+        message="管理权限已验证。",
+        admin_key_value=admin_key,
+        admin_authorized=True,
+        success=True,
+    )
+
+
 @app.post("/invites")
 def create_invite_code_route():
     init_db()
@@ -2043,7 +2336,51 @@ def create_invite_code_route():
             admin_key_value=admin_key,
         )
     code = create_invite_code()
-    return render_invite_codes_page(message="邀请码已生成。", invite_code=code, admin_key_value=admin_key)
+    return render_invite_codes_page(
+        message="邀请码已生成。",
+        invite_code=code,
+        admin_key_value=admin_key,
+        admin_authorized=True,
+        success=True,
+    )
+
+
+@app.post("/admin/users/<int:user_id>/password")
+def set_user_password_route(user_id: int):
+    init_db()
+    admin_key = request.form.get("admin_key", "")
+    if not invite_admin_key_matches(admin_key):
+        return render_invite_codes_page(
+            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            admin_key_value=admin_key,
+            admin_authorized=False,
+        )
+    ok, message = set_user_password(user_id, request.form.get("password", ""))
+    return render_invite_codes_page(
+        message=message,
+        admin_key_value=admin_key,
+        admin_authorized=True,
+        success=ok,
+    )
+
+
+@app.post("/admin/users/passwords")
+def set_all_user_passwords_route():
+    init_db()
+    admin_key = request.form.get("admin_key", "")
+    if not invite_admin_key_matches(admin_key):
+        return render_invite_codes_page(
+            message="管理密钥错误，或当前未登录且未配置 INVITE_ADMIN_KEY。",
+            admin_key_value=admin_key,
+            admin_authorized=False,
+        )
+    ok, message = set_all_user_passwords(request.form.get("password", ""))
+    return render_invite_codes_page(
+        message=message,
+        admin_key_value=admin_key,
+        admin_authorized=True,
+        success=ok,
+    )
 
 
 @app.post("/register")
