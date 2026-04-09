@@ -63,15 +63,33 @@ AUTH_TEMPLATE = """
     <style>
         :root {
             color-scheme: light;
-            --bg: #eef3f7;
-            --card: #ffffff;
+            --bg: #f4f7f8;
+            --surface: #fbfcfd;
+            --card: rgba(255, 255, 255, 0.92);
+            --card-strong: #ffffff;
             --primary: #0f766e;
-            --primary-hover: #0b5f59;
-            --primary-soft: #d9f3ef;
-            --muted: #5f6f6c;
-            --border: #d6e0e5;
-            --text: #12201c;
-            --shadow: 0 18px 40px rgba(18, 32, 28, 0.08);
+            --primary-hover: #0d655f;
+            --primary-soft: #dff3ef;
+            --text: #16312b;
+            --text-soft: #48615b;
+            --muted: #6e817d;
+            --border: rgba(22, 49, 43, 0.09);
+            --shadow-sm: 0 8px 20px rgba(22, 49, 43, 0.06);
+            --shadow-md: 0 16px 38px rgba(22, 49, 43, 0.08);
+            --radius-card: 20px;
+            --radius-control: 16px;
+            --radius-pill: 999px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --font-title: clamp(28px, 5vw, 36px);
+            --font-section: 20px;
+            --font-label: 13px;
+            --font-body: 15px;
+            --font-meta: 12px;
         }
 
         * { box-sizing: border-box; }
@@ -81,8 +99,10 @@ AUTH_TEMPLATE = """
             min-height: 100vh;
             display: grid;
             place-items: center;
-            padding: 24px;
-            background: var(--bg);
+            padding: var(--space-4);
+            background:
+                radial-gradient(circle at top, rgba(15, 118, 110, 0.08), transparent 32%),
+                var(--bg);
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
@@ -93,43 +113,61 @@ AUTH_TEMPLATE = """
             width: min(960px, 100%);
             display: grid;
             grid-template-columns: 1.1fr 1fr;
-            gap: 16px;
+            gap: var(--space-4);
             align-items: stretch;
         }
 
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: var(--radius-card);
             padding: 28px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
 
         .intro {
             display: grid;
             align-content: space-between;
-            gap: 28px;
+            gap: var(--space-6);
             background: #0f766e;
             color: #fff;
             border-color: #0f766e;
+            box-shadow: 0 18px 40px rgba(15, 118, 110, 0.18);
         }
 
         h1, h2 {
-            margin: 0 0 12px;
+            margin: 0;
             line-height: 1.2;
         }
 
         h1 {
-            font-size: 34px;
+            font-size: var(--font-title);
+            letter-spacing: -0.04em;
         }
 
         h2 {
             font-size: 22px;
+            letter-spacing: -0.02em;
         }
 
-        .subtitle, .helper {
+        .section-head {
+            display: grid;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .subtitle {
+            color: var(--text-soft);
+            margin: 0;
+            font-size: var(--font-body);
+        }
+
+        .helper {
             color: var(--muted);
-            margin: 0 0 14px;
+            margin: 0;
+            font-size: var(--font-meta);
+            line-height: 1.6;
         }
 
         .intro .subtitle,
@@ -139,62 +177,77 @@ AUTH_TEMPLATE = """
 
         .feature-list {
             display: grid;
-            gap: 10px;
+            gap: var(--space-2);
             margin: 0;
             padding: 0;
             list-style: none;
         }
 
         .feature-list li {
-            padding: 10px 12px;
+            padding: 12px 14px;
             border: 1px solid rgba(255, 255, 255, 0.22);
-            border-radius: 8px;
+            border-radius: var(--radius-control);
             background: rgba(255, 255, 255, 0.08);
+            line-height: 1.5;
         }
 
         form + .form-title {
-            margin-top: 24px;
+            margin-top: var(--space-6);
         }
 
-        label {
+        .stack-form {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .field {
             display: block;
-            margin-bottom: 14px;
-            color: var(--muted);
-            font-size: 14px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: var(--space-2);
+            color: var(--text);
+            font-size: var(--font-label);
             font-weight: 700;
         }
 
         input, button {
             width: 100%;
-            min-height: 48px;
-            margin-top: 6px;
-            border-radius: 12px;
-            padding: 12px 14px;
+            min-height: 52px;
+            margin-top: 0;
+            border-radius: var(--radius-control);
+            padding: 14px 16px;
             font: inherit;
             font-size: 16px;
         }
 
         input {
             border: 1px solid var(--border);
-            background: #fff;
+            background: var(--card-strong);
             color: var(--text);
             outline: none;
-            transition: border-color 140ms ease, box-shadow 140ms ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+        }
+
+        input::placeholder {
+            color: #93a5a0;
         }
 
         input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+            background: #ffffff;
         }
 
         .password-field {
             position: relative;
-            margin-top: 6px;
         }
 
         .password-field input {
             margin-top: 0;
-            padding-right: 72px;
+            padding-right: 82px;
         }
 
         .password-toggle {
@@ -202,13 +255,13 @@ AUTH_TEMPLATE = """
             top: 50%;
             right: 8px;
             width: auto;
-            min-width: 52px;
+            min-width: 56px;
             min-height: 36px;
             margin: 0;
             padding: 7px 10px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            background: var(--surface, #f8fafc);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.82);
             color: var(--primary);
             font-size: 13px;
             line-height: 1;
@@ -229,12 +282,14 @@ AUTH_TEMPLATE = """
             color: #fff;
             font-weight: 700;
             cursor: pointer;
-            transition: background 140ms ease, transform 140ms ease;
+            box-shadow: 0 10px 20px rgba(15, 118, 110, 0.18);
+            transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
             touch-action: manipulation;
         }
 
         button:hover {
             background: var(--primary-hover);
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.22);
         }
 
         button:active {
@@ -242,16 +297,16 @@ AUTH_TEMPLATE = """
         }
 
         .message {
-            margin-bottom: 16px;
+            margin-bottom: var(--space-4);
             padding: 12px 14px;
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-radius: 8px;
+            background: #fff8ef;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: var(--radius-control);
             color: #9a3412;
         }
 
         .muted-note {
-            margin-top: 20px;
+            margin-top: var(--space-4);
             margin-bottom: 0;
         }
 
@@ -271,7 +326,7 @@ AUTH_TEMPLATE = """
 
         @media (max-width: 780px) {
             body {
-                padding: 12px;
+                padding: var(--space-3);
             }
 
             .shell {
@@ -279,7 +334,7 @@ AUTH_TEMPLATE = """
             }
 
             .card {
-                padding: 20px;
+                padding: var(--space-5);
             }
 
             h1 {
@@ -306,15 +361,18 @@ AUTH_TEMPLATE = """
             {% if message %}
             <div class="message">{{ message }}</div>
             {% endif %}
-            <h2 class="form-title">登录</h2>
-            <form method="post" action="{{ url_for('login') }}">
+            <div class="section-head">
+                <h2 class="form-title">登录</h2>
+                <p class="helper">继续记录你的体重变化，系统会在当前设备保留 30 天登录状态。</p>
+            </div>
+            <form class="stack-form" method="post" action="{{ url_for('login') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>
-                    用户名
+                <label class="field">
+                    <span class="field-label">用户名</span>
                     <input name="username" maxlength="32" required>
                 </label>
-                <label>
-                    密码
+                <label class="field">
+                    <span class="field-label">密码</span>
                     <span class="password-field">
                         <input type="password" name="password" minlength="6" required>
                         <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
@@ -322,24 +380,26 @@ AUTH_TEMPLATE = """
                 </label>
                 <button type="submit">登录</button>
             </form>
-            <p class="helper">同一设备登录后，30 天内再次访问默认无需重新输入密码。</p>
             {% if registration_enabled %}
-            <h2 class="form-title">注册</h2>
-            <form method="post" action="{{ url_for('register') }}">
+            <div class="section-head">
+                <h2 class="form-title">注册</h2>
+                <p class="helper">使用邀请码创建独立账号，登录后数据将按用户分别保存。</p>
+            </div>
+            <form class="stack-form" method="post" action="{{ url_for('register') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>
-                    用户名
+                <label class="field">
+                    <span class="field-label">用户名</span>
                     <input name="username" maxlength="32" required>
                 </label>
-                <label>
-                    密码
+                <label class="field">
+                    <span class="field-label">密码</span>
                     <span class="password-field">
                         <input type="password" name="password" minlength="6" required>
                         <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
                     </span>
                 </label>
-                <label>
-                    邀请码
+                <label class="field">
+                    <span class="field-label">邀请码</span>
                     <input name="invite_code" required>
                 </label>
                 <button type="submit">创建账号</button>
@@ -378,16 +438,31 @@ INVITE_TEMPLATE = """
     <style>
         :root {
             color-scheme: light;
-            --bg: #eef3f7;
-            --card: #ffffff;
+            --bg: #f4f7f8;
+            --surface: #fbfcfd;
+            --card: rgba(255, 255, 255, 0.92);
+            --card-strong: #ffffff;
             --primary: #0f766e;
-            --primary-hover: #0b5f59;
-            --primary-soft: #d9f3ef;
-            --muted: #5f6f6c;
-            --border: #d6e0e5;
-            --text: #12201c;
-            --shadow: 0 18px 40px rgba(18, 32, 28, 0.08);
+            --primary-hover: #0d655f;
+            --primary-soft: #dff3ef;
+            --muted: #6e817d;
+            --text: #16312b;
+            --text-soft: #48615b;
+            --border: rgba(22, 49, 43, 0.09);
+            --shadow-sm: 0 8px 20px rgba(22, 49, 43, 0.06);
+            --shadow-md: 0 16px 38px rgba(22, 49, 43, 0.08);
             --danger: #b42318;
+            --danger-soft: #fef1ef;
+            --success-soft: #e8f7f2;
+            --radius-card: 20px;
+            --radius-control: 16px;
+            --radius-pill: 999px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
         }
 
         * { box-sizing: border-box; }
@@ -397,8 +472,10 @@ INVITE_TEMPLATE = """
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            padding: 24px;
-            background: var(--bg);
+            padding: var(--space-4);
+            background:
+                radial-gradient(circle at top, rgba(15, 118, 110, 0.08), transparent 32%),
+                var(--bg);
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
@@ -409,57 +486,81 @@ INVITE_TEMPLATE = """
             width: min(1120px, 100%);
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: var(--radius-card);
             padding: 28px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
 
         h1 {
-            margin: 0 0 12px;
-            font-size: 28px;
+            margin: 0;
+            font-size: clamp(28px, 5vw, 34px);
             line-height: 1.2;
+            letter-spacing: -0.04em;
         }
 
         h2 {
-            margin: 0 0 12px;
+            margin: 0;
             font-size: 20px;
             line-height: 1.2;
+            letter-spacing: -0.02em;
         }
 
         p {
-            margin: 0 0 16px;
+            margin: 0;
             color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .section-head {
+            display: grid;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-head.compact {
+            margin-bottom: var(--space-3);
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-            margin-top: 18px;
+            gap: var(--space-4);
+            margin-top: var(--space-4);
         }
 
         .panel {
             min-width: 0;
-            padding: 18px;
+            padding: var(--space-5);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            background: #f8fafc;
+            border-radius: calc(var(--radius-card) - 4px);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 252, 0.94) 100%);
+            box-shadow: var(--shadow-sm);
         }
 
-        label {
+        .stack-form {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .field {
             display: block;
-            margin-bottom: 14px;
-            color: var(--muted);
-            font-size: 14px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: var(--space-2);
+            color: var(--text);
+            font-size: 13px;
             font-weight: 700;
         }
 
         input, button, select {
             width: 100%;
-            min-height: 48px;
-            margin-top: 6px;
-            border-radius: 12px;
-            padding: 12px 14px;
+            min-height: 52px;
+            margin-top: 0;
+            border-radius: var(--radius-control);
+            padding: 14px 16px;
             font: inherit;
             font-size: 16px;
         }
@@ -468,11 +569,17 @@ INVITE_TEMPLATE = """
             border: 1px solid var(--border);
             color: var(--text);
             outline: none;
+            background: var(--card-strong);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        input::placeholder {
+            color: #93a5a0;
         }
 
         input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
         }
 
         button {
@@ -481,6 +588,7 @@ INVITE_TEMPLATE = """
             color: #fff;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 10px 20px rgba(15, 118, 110, 0.18);
             touch-action: manipulation;
         }
 
@@ -489,43 +597,44 @@ INVITE_TEMPLATE = """
         }
 
         .message {
-            margin-bottom: 16px;
+            margin-bottom: var(--space-4);
             padding: 12px 14px;
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-radius: 8px;
+            background: #fff8ef;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: var(--radius-control);
             color: #9a3412;
         }
 
         .success {
-            background: #ecfdf3;
-            border-color: #bbf7d0;
+            background: #f0faf5;
+            border-color: rgba(15, 118, 110, 0.16);
             color: #166534;
         }
 
         .code-box {
             display: grid;
-            gap: 8px;
-            margin: 18px 0;
-            padding: 16px;
+            gap: var(--space-2);
+            margin: var(--space-4) 0;
+            padding: var(--space-4);
             border: 1px solid var(--border);
             border-left: 4px solid var(--primary);
-            border-radius: 8px;
-            background: #f8fafc;
+            border-radius: var(--radius-control);
+            background: rgba(255, 255, 255, 0.74);
         }
 
         .code-value {
             overflow-wrap: anywhere;
-            font-size: 24px;
+            font-size: clamp(24px, 4vw, 30px);
             font-weight: 800;
             color: var(--primary);
+            letter-spacing: -0.03em;
         }
 
         .actions {
             display: flex;
-            gap: 10px;
+            gap: var(--space-2);
             flex-wrap: wrap;
-            margin-top: 18px;
+            margin-top: var(--space-4);
         }
 
         table {
@@ -543,7 +652,7 @@ INVITE_TEMPLATE = """
         }
 
         th, td {
-            padding: 10px 8px;
+            padding: 12px 8px;
             border-bottom: 1px solid var(--border);
             text-align: left;
             vertical-align: top;
@@ -556,7 +665,7 @@ INVITE_TEMPLATE = """
 
         .inline-form {
             display: grid;
-            gap: 8px;
+            gap: var(--space-2);
         }
 
         .inline-form input {
@@ -569,6 +678,7 @@ INVITE_TEMPLATE = """
 
         .danger-button {
             background: var(--danger);
+            box-shadow: none;
         }
 
         .danger-button:hover {
@@ -579,13 +689,15 @@ INVITE_TEMPLATE = """
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 48px;
-            padding: 0 14px;
-            border-radius: 12px;
+            min-height: 52px;
+            padding: 0 16px;
+            border-radius: var(--radius-control);
             text-decoration: none;
             color: var(--primary);
-            border: 1px solid var(--primary);
+            border: 1px solid rgba(15, 118, 110, 0.14);
+            background: rgba(255, 255, 255, 0.72);
             font-weight: 700;
+            box-shadow: var(--shadow-sm);
             touch-action: manipulation;
         }
 
@@ -595,11 +707,11 @@ INVITE_TEMPLATE = """
 
         @media (max-width: 800px) {
             body {
-                padding: 12px;
+                padding: var(--space-3);
             }
 
             .card {
-                padding: 18px;
+                padding: var(--space-5);
             }
 
             .grid {
@@ -633,7 +745,7 @@ INVITE_TEMPLATE = """
 
             tr {
                 border: 1px solid var(--border);
-                border-radius: 12px;
+                border-radius: var(--radius-control);
                 padding: 12px;
                 background: #ffffff;
             }
@@ -662,8 +774,10 @@ INVITE_TEMPLATE = """
 </head>
 <body>
     <main class="card">
-        <h1>账号管理</h1>
-        <p>生成一次性邀请码，查看账号，并修改账号密码。</p>
+        <div class="section-head">
+            <h1>账号管理</h1>
+            <p>生成一次性邀请码，查看账号，并修改账号密码。</p>
+        </div>
 
         {% if message %}
         <div class="message {% if success %}success{% endif %}">{{ message }}</div>
@@ -679,15 +793,18 @@ INVITE_TEMPLATE = """
 
         {% if not admin_authorized %}
         <section class="panel">
-            <h2>验证管理权限</h2>
-            <form method="post" action="{{ url_for('admin_authorize_route') }}">
+            <div class="section-head compact">
+                <h2>验证管理权限</h2>
+                <p>验证通过后即可管理邀请码、账号和密码。</p>
+            </div>
+            <form class="stack-form" method="post" action="{{ url_for('admin_authorize_route') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>
-                    管理账号
+                <label class="field">
+                    <span class="field-label">管理账号</span>
                     <input name="admin_username" value="{{ admin_username_value }}" autocomplete="username" required>
                 </label>
-                <label>
-                    管理密码
+                <label class="field">
+                    <span class="field-label">管理密码</span>
                     <input name="admin_password" type="password" autocomplete="current-password" required>
                 </label>
                 <button type="submit">进入管理</button>
@@ -696,9 +813,11 @@ INVITE_TEMPLATE = """
         {% else %}
         <div class="grid">
             <section class="panel">
-                <h2>邀请码</h2>
-                <p>生成的邀请码只能注册一个账号，注册成功后自动失效。</p>
-                <form method="post" action="{{ url_for('create_invite_code_route') }}">
+                <div class="section-head compact">
+                    <h2>邀请码</h2>
+                    <p>生成的邀请码只能注册一个账号，注册成功后自动失效。</p>
+                </div>
+                <form class="stack-form" method="post" action="{{ url_for('create_invite_code_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if admin_key_required %}
                     <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
@@ -733,15 +852,17 @@ INVITE_TEMPLATE = """
             </section>
 
             <section class="panel">
-                <h2>所有账号密码</h2>
-                <p>把所有账号统一改成一个新密码。</p>
-                <form method="post" action="{{ url_for('set_all_user_passwords_route') }}">
+                <div class="section-head compact">
+                    <h2>所有账号密码</h2>
+                    <p>把所有账号统一改成一个新密码。</p>
+                </div>
+                <form class="stack-form" method="post" action="{{ url_for('set_all_user_passwords_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if admin_key_required %}
                     <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
                     {% endif %}
-                    <label>
-                        新密码
+                    <label class="field">
+                        <span class="field-label">新密码</span>
                         <input name="password" type="password" minlength="6" required>
                     </label>
                     <button class="danger-button" type="submit">修改所有账号密码</button>
@@ -749,23 +870,25 @@ INVITE_TEMPLATE = """
             </section>
 
             <section class="panel">
-                <h2>管理账号密码</h2>
-                <p>修改当前管理登录密码。下次进入管理页时使用新密码。</p>
-                <form method="post" action="{{ url_for('set_admin_password_route') }}">
+                <div class="section-head compact">
+                    <h2>管理账号密码</h2>
+                    <p>修改当前管理登录密码。下次进入管理页时使用新密码。</p>
+                </div>
+                <form class="stack-form" method="post" action="{{ url_for('set_admin_password_route') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if admin_key_required %}
                     <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
                     {% endif %}
-                    <label>
-                        当前管理密码
+                    <label class="field">
+                        <span class="field-label">当前管理密码</span>
                         <input name="current_password" type="password" autocomplete="current-password" required>
                     </label>
-                    <label>
-                        新管理密码
+                    <label class="field">
+                        <span class="field-label">新管理密码</span>
                         <input name="new_password" type="password" minlength="6" autocomplete="new-password" required>
                     </label>
-                    <label>
-                        确认新管理密码
+                    <label class="field">
+                        <span class="field-label">确认新管理密码</span>
                         <input name="confirm_password" type="password" minlength="6" autocomplete="new-password" required>
                     </label>
                     <button type="submit">修改管理密码</button>
@@ -774,7 +897,10 @@ INVITE_TEMPLATE = """
         </div>
 
         <section class="panel" style="margin-top: 16px;">
-            <h2>账号列表</h2>
+            <div class="section-head compact">
+                <h2>账号列表</h2>
+                <p>查看当前已注册账号，并可为单个账号直接设置新密码。</p>
+            </div>
             {% if user_rows %}
             <div class="table-scroll">
                 <table>
@@ -836,19 +962,40 @@ PAGE_TEMPLATE = """
     <style>
         :root {
             color-scheme: light;
-            --bg: #eef3f7;
-            --card: #ffffff;
+            --bg: #f4f7f8;
+            --surface: #fbfcfd;
+            --card: rgba(255, 255, 255, 0.92);
+            --card-strong: #ffffff;
             --primary: #0f766e;
-            --primary-hover: #0b5f59;
-            --primary-soft: #d9f3ef;
-            --text: #12201c;
-            --muted: #5f6f6c;
+            --primary-hover: #0d655f;
+            --primary-soft: #dff3ef;
+            --accent: #f59e0b;
+            --success-soft: #e8f7f2;
             --danger: #b42318;
-            --danger-soft: #fee4e2;
-            --border: #d6e0e5;
-            --accent: #f97316;
-            --surface: #f8fafc;
-            --shadow: 0 16px 36px rgba(18, 32, 28, 0.08);
+            --danger-soft: #fef1ef;
+            --text: #16312b;
+            --text-soft: #48615b;
+            --muted: #6e817d;
+            --border: rgba(22, 49, 43, 0.09);
+            --border-strong: rgba(22, 49, 43, 0.14);
+            --shadow-sm: 0 8px 20px rgba(22, 49, 43, 0.06);
+            --shadow-md: 0 16px 38px rgba(22, 49, 43, 0.08);
+            --radius-card: 20px;
+            --radius-control: 16px;
+            --radius-pill: 999px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-7: 32px;
+            --font-title: clamp(28px, 5vw, 36px);
+            --font-section: 20px;
+            --font-stat: clamp(28px, 5.2vw, 34px);
+            --font-label: 13px;
+            --font-body: 15px;
+            --font-meta: 12px;
         }
 
         * { box-sizing: border-box; }
@@ -857,47 +1004,52 @@ PAGE_TEMPLATE = """
             margin: 0;
             min-height: 100vh;
             font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            background: var(--bg);
+            background:
+                radial-gradient(circle at top, rgba(15, 118, 110, 0.08), transparent 32%),
+                var(--bg);
             color: var(--text);
             line-height: 1.5;
             -webkit-text-size-adjust: 100%;
         }
 
         .container {
-            width: min(1180px, calc(100vw - 24px));
-            margin: 24px auto;
+            width: min(1180px, calc(100vw - 20px));
+            margin: var(--space-4) auto var(--space-6);
         }
 
         .hero {
             display: flex;
             justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 18px;
-            align-items: flex-end;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+            align-items: flex-start;
         }
 
         h1, h2, h3 {
-            margin: 0 0 12px;
+            margin: 0;
             line-height: 1.2;
         }
 
         h1 {
-            font-size: 34px;
+            font-size: var(--font-title);
+            letter-spacing: -0.04em;
         }
 
         h2 {
-            font-size: 20px;
+            font-size: var(--font-section);
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            color: var(--muted);
-            margin: 0;
+            color: var(--text-soft);
+            margin: var(--space-2) 0 0;
             max-width: 720px;
+            font-size: var(--font-body);
         }
 
         .hero-actions {
             display: flex;
-            gap: 10px;
+            gap: var(--space-2);
             align-items: center;
             flex-wrap: wrap;
         }
@@ -905,21 +1057,22 @@ PAGE_TEMPLATE = """
         .layout {
             display: grid;
             grid-template-columns: minmax(300px, 360px) 1fr;
-            gap: 16px;
+            gap: var(--space-4);
             align-items: start;
         }
 
         .sidebar, .main {
             display: grid;
-            gap: 16px;
+            gap: var(--space-4);
         }
 
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 22px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius-card);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
         }
 
         .sidebar > .card,
@@ -927,11 +1080,34 @@ PAGE_TEMPLATE = """
             height: 100%;
         }
 
+        .section-head {
+            display: grid;
+            gap: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-head.compact {
+            margin-bottom: var(--space-3);
+        }
+
+        .section-title {
+            font-size: var(--font-section);
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .section-copy {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 18px;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
             align-items: stretch;
         }
 
@@ -940,14 +1116,15 @@ PAGE_TEMPLATE = """
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%);
+            gap: var(--space-2);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 252, 0.96) 100%);
             border: 1px solid var(--border);
             border-left: none;
-            border-radius: 16px;
-            padding: 16px;
-            min-height: 124px;
+            border-radius: var(--radius-card);
+            padding: var(--space-4);
+            min-height: 136px;
             height: 100%;
-            box-shadow: 0 10px 24px rgba(18, 32, 28, 0.06);
+            box-shadow: var(--shadow-sm);
         }
 
         .stat::before {
@@ -972,64 +1149,108 @@ PAGE_TEMPLATE = """
 
         .stat-label {
             color: var(--muted);
-            font-size: 12px;
+            font-size: var(--font-meta);
             letter-spacing: 0.04em;
-            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-main {
+            display: flex;
+            align-items: flex-end;
+            gap: var(--space-1);
+            min-height: 48px;
         }
 
         .stat-value {
-            font-size: clamp(24px, 4vw, 30px);
+            font-size: var(--font-stat);
             font-weight: 700;
-            line-height: 1.15;
+            line-height: 1;
             overflow-wrap: anywhere;
             letter-spacing: -0.03em;
         }
 
-        .stat-tip {
-            font-size: 12px;
+        .stat-unit {
+            padding-bottom: 4px;
             color: var(--muted);
-            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-2);
+            margin-top: auto;
+        }
+
+        .stat-tip {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.4;
         }
 
         .stat .bmi-badge {
-            margin-top: auto;
             align-self: flex-start;
         }
 
-        label {
+        .field {
             display: block;
-            margin-bottom: 14px;
-            font-size: 14px;
-            color: var(--muted);
+            margin-bottom: var(--space-3);
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: var(--space-2);
+            font-size: var(--font-label);
+            color: var(--text);
             font-weight: 700;
+        }
+
+        .field-note {
+            margin: 0;
+            color: var(--muted);
+            font-size: var(--font-meta);
+            line-height: 1.5;
         }
 
         input, textarea, button {
             width: 100%;
-            min-height: 48px;
-            border-radius: 12px;
+            min-height: 52px;
+            border-radius: var(--radius-control);
             border: 1px solid var(--border);
-            padding: 12px 14px;
+            padding: 14px 16px;
             font: inherit;
             font-size: 16px;
         }
 
         input, textarea {
-            margin-top: 6px;
-            background: #fff;
+            margin-top: 0;
+            background: var(--card-strong);
             color: var(--text);
             outline: none;
-            transition: border-color 140ms ease, box-shadow 140ms ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #93a5a0;
         }
 
         input:focus,
         textarea:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+            background: #ffffff;
         }
 
         textarea {
-            min-height: 96px;
+            min-height: 112px;
             resize: vertical;
             line-height: 1.5;
         }
@@ -1040,31 +1261,39 @@ PAGE_TEMPLATE = """
             color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: background 140ms ease, transform 140ms ease;
+            box-shadow: 0 10px 20px rgba(15, 118, 110, 0.18);
+            transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
             touch-action: manipulation;
         }
 
         button:hover {
             background: var(--primary-hover);
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.22);
         }
 
         button:active {
             transform: translateY(1px);
         }
 
+        .primary-button {
+            margin-top: var(--space-2);
+        }
+
         .delete-btn {
             background: var(--danger-soft);
             color: var(--danger);
-            border: 1px solid #fecdca;
+            border: 1px solid rgba(180, 35, 24, 0.14);
+            box-shadow: none;
         }
 
         .delete-btn:hover {
-            background: #fecdca;
+            background: #fce5e1;
+            box-shadow: none;
         }
 
         .row-actions {
             display: flex;
-            gap: 8px;
+            gap: var(--space-2);
             flex-wrap: wrap;
         }
 
@@ -1078,38 +1307,40 @@ PAGE_TEMPLATE = """
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 48px;
-            padding: 0 14px;
-            border-radius: 12px;
+            min-height: 52px;
+            padding: 0 16px;
+            border-radius: var(--radius-control);
             text-decoration: none;
             color: var(--primary);
-            border: 1px solid var(--primary);
-            background: transparent;
+            border: 1px solid rgba(15, 118, 110, 0.14);
+            background: rgba(255, 255, 255, 0.72);
             font-weight: 700;
-            transition: background 140ms ease, color 140ms ease;
+            box-shadow: var(--shadow-sm);
+            transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
             white-space: nowrap;
             touch-action: manipulation;
         }
 
         .action-link:hover {
             background: var(--primary-soft);
+            border-color: rgba(15, 118, 110, 0.22);
         }
 
         .message {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
+            background: #fff8ef;
+            border: 1px solid rgba(245, 158, 11, 0.2);
             color: #9a3412;
-            padding: 12px 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-control);
+            margin-bottom: var(--space-4);
         }
 
         .chart-wrap {
             position: relative;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
+            border-radius: calc(var(--radius-card) - 4px);
+            padding: var(--space-3);
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
@@ -1149,23 +1380,23 @@ PAGE_TEMPLATE = """
 
         .chart-caption {
             color: var(--muted);
-            font-size: 13px;
-            margin-top: 10px;
+            font-size: var(--font-meta);
+            margin-top: var(--space-2);
         }
 
         .chart-grid {
             display: grid;
-            gap: 20px;
+            gap: var(--space-5);
         }
 
         .segmented {
             display: inline-flex;
             gap: 4px;
             padding: 4px;
-            border-radius: 12px;
-            background: #e8eef2;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.72);
             border: 1px solid var(--border);
-            margin-bottom: 14px;
+            margin-bottom: var(--space-4);
             max-width: 100%;
         }
 
@@ -1174,11 +1405,11 @@ PAGE_TEMPLATE = """
             align-items: center;
             justify-content: center;
             min-height: 44px;
-            padding: 8px 14px;
-            border-radius: 10px;
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
             text-decoration: none;
             color: var(--muted);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             text-align: center;
         }
@@ -1186,46 +1417,62 @@ PAGE_TEMPLATE = """
         .segmented a.active {
             background: var(--primary);
             color: #fff;
+            box-shadow: 0 8px 16px rgba(15, 118, 110, 0.18);
         }
 
         .filter-form {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
+            gap: var(--space-3);
             align-items: end;
-            margin-bottom: 16px;
+            margin-bottom: var(--space-4);
         }
 
         .filter-actions {
             display: flex;
-            gap: 8px;
+            gap: var(--space-2);
+        }
+
+        .filter-actions > *,
+        .row-actions > * {
+            margin-top: 0;
         }
 
         .form-secondary {
-            margin-top: 10px;
+            margin-top: var(--space-3);
+        }
+
+        .stack-form {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .stack-form .field {
+            margin: 0;
         }
 
         .progress-shell {
-            margin-top: 12px;
-            background: #e2e8f0;
-            border-radius: 999px;
-            height: 16px;
+            margin-top: var(--space-3);
+            background: #e7eef0;
+            border-radius: var(--radius-pill);
+            height: 14px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            border-radius: 999px;
+            border-radius: var(--radius-pill);
             background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
         }
 
         .progress-meta {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
-            margin-top: 10px;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
             font-size: 13px;
             color: var(--muted);
+            flex-wrap: wrap;
         }
 
         .table-scroll {
@@ -1242,7 +1489,7 @@ PAGE_TEMPLATE = """
 
         th, td {
             text-align: left;
-            padding: 12px 8px;
+            padding: 14px 8px;
             border-bottom: 1px solid var(--border);
             vertical-align: top;
         }
@@ -1255,11 +1502,11 @@ PAGE_TEMPLATE = """
 
         .empty {
             color: var(--muted);
-            padding: 24px 0 8px;
+            padding: var(--space-5) 0 var(--space-1);
         }
 
         .row-note {
-            color: var(--muted);
+            color: var(--text-soft);
             font-size: 13px;
             white-space: pre-wrap;
             word-break: break-word;
@@ -1267,25 +1514,34 @@ PAGE_TEMPLATE = """
 
         .helper {
             color: var(--muted);
-            font-size: 13px;
-            margin-top: -6px;
-            margin-bottom: 14px;
+            font-size: var(--font-meta);
+            margin: 0;
+            line-height: 1.6;
         }
 
         .bmi-badge {
             display: inline-block;
-            margin-top: 8px;
             padding: 6px 10px;
-            border-radius: 999px;
-            background: var(--primary-soft);
+            border-radius: var(--radius-pill);
+            background: var(--success-soft);
             color: #0b5f59;
             font-size: 12px;
             font-weight: 700;
         }
 
+        .record-form-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 252, 0.94) 100%);
+        }
+
+        .section-divider {
+            height: 1px;
+            margin: var(--space-4) 0;
+            background: var(--border);
+        }
+
         @media (max-width: 860px) {
             .container {
-                margin: 20px auto;
+                margin: var(--space-4) auto var(--space-5);
             }
 
             .hero, .layout {
@@ -1296,7 +1552,7 @@ PAGE_TEMPLATE = """
 
             .stats {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
+                gap: var(--space-3);
             }
 
             .filter-form {
@@ -1315,34 +1571,33 @@ PAGE_TEMPLATE = """
         @media (max-width: 560px) {
             .container {
                 width: calc(100vw - 16px);
-                margin: 8px auto 16px;
+                margin: var(--space-2) auto var(--space-5);
             }
 
             .hero {
-                gap: 12px;
+                gap: var(--space-3);
             }
 
             h1 {
-                font-size: 28px;
+                font-size: 30px;
             }
 
             .stats {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: var(--space-3);
             }
 
             .stat {
                 min-height: 0;
-                padding: 14px 16px;
+                padding: var(--space-4);
             }
 
             .stat-label {
-                margin-bottom: 8px;
                 font-size: 11px;
             }
 
             .stat-value {
-                font-size: clamp(28px, 8vw, 34px);
+                font-size: clamp(30px, 9vw, 38px);
             }
 
             .stat-tip {
@@ -1350,11 +1605,11 @@ PAGE_TEMPLATE = """
             }
 
             .stat .bmi-badge {
-                margin-top: 10px;
+                margin-top: var(--space-2);
             }
 
             .card {
-                padding: 16px;
+                padding: var(--space-4);
             }
 
             .segmented,
@@ -1381,7 +1636,7 @@ PAGE_TEMPLATE = """
             }
 
             .chart-wrap {
-                padding: 10px;
+                padding: var(--space-3);
             }
 
             .chart-frame {
@@ -1412,7 +1667,7 @@ PAGE_TEMPLATE = """
 
             tr {
                 border: 1px solid var(--border);
-                border-radius: 12px;
+                border-radius: var(--radius-control);
                 padding: 12px;
                 background: var(--surface);
             }
@@ -1458,56 +1713,90 @@ PAGE_TEMPLATE = """
         <div class="stats">
             <div class="stat">
                 <div class="stat-label">最新体重</div>
-                <div class="stat-value">{{ latest_weight if latest_weight is not none else "--" }}</div>
-                <div class="stat-tip">{% if latest_weight is not none %}kg{% else %}暂无数据{% endif %}</div>
+                <div class="stat-main">
+                    <div class="stat-value">{{ latest_weight if latest_weight is not none else "--" }}</div>
+                    {% if latest_weight is not none %}
+                    <div class="stat-unit">kg</div>
+                    {% endif %}
+                </div>
+                <div class="stat-meta">
+                    <div class="stat-tip">{% if latest_weight is not none %}最近一次记录{% else %}暂无数据{% endif %}</div>
+                </div>
             </div>
             <div class="stat">
                 <div class="stat-label">记录总数</div>
-                <div class="stat-value">{{ total_count }}</div>
-                <div class="stat-tip">筛选范围内记录数</div>
+                <div class="stat-main">
+                    <div class="stat-value">{{ total_count }}</div>
+                    <div class="stat-unit">条</div>
+                </div>
+                <div class="stat-meta">
+                    <div class="stat-tip">筛选范围内记录数</div>
+                </div>
             </div>
             <div class="stat">
                 <div class="stat-label">平均体重</div>
-                <div class="stat-value">{{ average_weight if average_weight is not none else "--" }}</div>
-                <div class="stat-tip">{% if average_weight is not none %}kg{% else %}暂无数据{% endif %}</div>
+                <div class="stat-main">
+                    <div class="stat-value">{{ average_weight if average_weight is not none else "--" }}</div>
+                    {% if average_weight is not none %}
+                    <div class="stat-unit">kg</div>
+                    {% endif %}
+                </div>
+                <div class="stat-meta">
+                    <div class="stat-tip">{% if average_weight is not none %}当前筛选区间平均值{% else %}暂无数据{% endif %}</div>
+                </div>
             </div>
             <div class="stat">
                 <div class="stat-label">当前 BMI</div>
-                <div class="stat-value">{{ bmi_value if bmi_value is not none else "--" }}</div>
-                <div class="stat-tip">{% if height_cm %}身高 {{ height_cm }} cm{% else %}先填写身高{% endif %}</div>
-                {% if bmi_category %}
-                <div class="bmi-badge">{{ bmi_category }}</div>
-                {% endif %}
+                <div class="stat-main">
+                    <div class="stat-value">{{ bmi_value if bmi_value is not none else "--" }}</div>
+                </div>
+                <div class="stat-meta">
+                    <div class="stat-tip">{% if height_cm %}身高 {{ height_cm }} cm{% else %}先填写身高{% endif %}</div>
+                    {% if bmi_category %}
+                    <div class="bmi-badge">{{ bmi_category }}</div>
+                    {% endif %}
+                </div>
             </div>
             <div class="stat">
                 <div class="stat-label">距目标体重</div>
-                <div class="stat-value">{{ remaining_delta if remaining_delta is not none else "--" }}</div>
-                <div class="stat-tip">{% if target_weight %}目标 {{ target_weight }} kg{% else %}先设置目标{% endif %}</div>
-                {% if remaining_status %}
-                <div class="bmi-badge">{{ remaining_status }}</div>
-                {% endif %}
+                <div class="stat-main">
+                    <div class="stat-value">{{ remaining_delta if remaining_delta is not none else "--" }}</div>
+                    {% if remaining_delta is not none %}
+                    <div class="stat-unit">kg</div>
+                    {% endif %}
+                </div>
+                <div class="stat-meta">
+                    <div class="stat-tip">{% if target_weight %}目标 {{ target_weight }} kg{% else %}先设置目标{% endif %}</div>
+                    {% if remaining_status %}
+                    <div class="bmi-badge">{{ remaining_status }}</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
         <div class="layout">
             <aside class="sidebar">
-                <section class="card">
-                    <h2>{{ "编辑记录" if editing_record else "新增记录" }}</h2>
-                    <form method="post" action="{{ url_for('update_record', record_id=editing_record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) if editing_record else url_for('add_record', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
+                <section class="card record-form-card">
+                    <div class="section-head">
+                        <h2 class="section-title">{{ "编辑记录" if editing_record else "新增记录" }}</h2>
+                        <p class="section-copy">记录当天体重和备注，保持输入节奏清晰，手机上单手也更容易填写。</p>
+                    </div>
+                    <form class="stack-form" method="post" action="{{ url_for('update_record', record_id=editing_record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) if editing_record else url_for('add_record', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <label>
-                            日期
+                        <label class="field">
+                            <span class="field-label">日期</span>
                             <input type="date" name="record_date" value="{{ form_record_date }}" required>
                         </label>
-                        <label>
-                            体重（kg）
+                        <label class="field">
+                            <span class="field-label">体重（kg）</span>
                             <input type="number" name="weight" step="0.1" min="1" value="{{ form_weight }}" placeholder="例如 60.5" required>
                         </label>
-                        <label>
-                            备注
+                        <label class="field">
+                            <span class="field-label">备注</span>
                             <textarea name="note" placeholder="例如：晨起空腹、运动后等">{{ form_note }}</textarea>
+                            <span class="field-note">可选填写，用来区分晨起、运动后或特殊状态。</span>
                         </label>
-                        <button type="submit">{{ "保存修改" if editing_record else "保存记录" }}</button>
+                        <button class="primary-button" type="submit">{{ "保存修改" if editing_record else "保存记录" }}</button>
                     </form>
                     {% if editing_record %}
                     <div class="form-secondary">
@@ -1517,37 +1806,44 @@ PAGE_TEMPLATE = """
                 </section>
 
                 <section class="card">
-                    <h2>批量添加</h2>
-                    <p class="helper">每行一条，支持多种格式，例如：`2026-04-06,59.8,晨起`、`2026-04-06 59.8 晨起`、`2026/04/06 59.8`、`2026-04-06，59.8，晨起`。</p>
-                    <form method="post" action="{{ url_for('bulk_add_records', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
+                    <div class="section-head compact">
+                        <h2 class="section-title">批量添加</h2>
+                        <p class="helper">每行一条，支持 `2026-04-06,59.8,晨起`、`2026-04-06 59.8 晨起`、`2026/04/06 59.8` 等格式。</p>
+                    </div>
+                    <form class="stack-form" method="post" action="{{ url_for('bulk_add_records', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <label>
-                            批量数据
+                        <label class="field">
+                            <span class="field-label">批量数据</span>
                             <textarea name="bulk_text" placeholder="2026-04-01,60.5,晨起&#10;2026-04-02 60.2&#10;2026/04/03，59.9，运动后"></textarea>
                         </label>
-                        <button type="submit">批量保存</button>
+                        <button class="primary-button" type="submit">批量保存</button>
                     </form>
                 </section>
 
                 <section class="card">
-                    <h2>身体数据设置</h2>
-                    <p class="helper">BMI = 体重(kg) / 身高(m)^2。目标体重会用于差值、进度和图表提醒线。</p>
-                    <form method="post" action="{{ url_for('save_profile', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
+                    <div class="section-head compact">
+                        <h2 class="section-title">身体数据设置</h2>
+                        <p class="helper">BMI = 体重(kg) / 身高(m)^2。目标体重会用于差值、进度和图表提醒线。</p>
+                    </div>
+                    <form class="stack-form" method="post" action="{{ url_for('save_profile', chart=chart_mode, start_date=start_date, end_date=end_date) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <label>
-                            身高（cm）
+                        <label class="field">
+                            <span class="field-label">身高（cm）</span>
                             <input type="number" name="height_cm" step="0.1" min="50" value="{{ height_cm or '' }}" placeholder="例如 170">
                         </label>
-                        <label>
-                            目标体重（kg）
+                        <label class="field">
+                            <span class="field-label">目标体重（kg）</span>
                             <input type="number" name="target_weight" step="0.1" min="1" value="{{ target_weight or '' }}" placeholder="例如 55">
                         </label>
-                        <button type="submit">保存设置</button>
+                        <button class="primary-button" type="submit">保存设置</button>
                     </form>
                 </section>
 
                 <section class="card">
-                    <h2>目标达成示意</h2>
+                    <div class="section-head compact">
+                        <h2 class="section-title">目标达成示意</h2>
+                        <p class="helper">根据当前筛选范围中的第一条记录作为起点，计算你距离目标的完成度。</p>
+                    </div>
                     {% if progress_percent is not none %}
                     <div class="stat-value">{{ progress_percent }}%</div>
                     <div class="progress-shell">
@@ -1566,19 +1862,22 @@ PAGE_TEMPLATE = """
 
             <main class="main">
                 <section class="card">
-                    <h2>体重变化趋势</h2>
+                    <div class="section-head compact">
+                        <h2 class="section-title">体重变化趋势</h2>
+                        <p class="helper">按日期区间筛选并切换日 / 周 / 月视角，更适合在手机上快速看趋势。</p>
+                    </div>
                     <form class="filter-form" method="get" action="{{ url_for('index') }}">
-                        <label>
-                            开始日期
+                        <label class="field">
+                            <span class="field-label">开始日期</span>
                             <input type="date" name="start_date" value="{{ start_date }}">
                         </label>
-                        <label>
-                            结束日期
+                        <label class="field">
+                            <span class="field-label">结束日期</span>
                             <input type="date" name="end_date" value="{{ end_date }}">
                         </label>
                         <div class="filter-actions">
                             <input type="hidden" name="chart" value="{{ chart_mode }}">
-                            <button type="submit">筛选</button>
+                            <button class="primary-button" type="submit">筛选</button>
                             <a class="action-link" href="{{ url_for('index', chart=chart_mode) }}">清空</a>
                         </div>
                     </form>
@@ -1611,7 +1910,10 @@ PAGE_TEMPLATE = """
                 </section>
 
                 <section class="card">
-                    <h2>历史记录</h2>
+                    <div class="section-head compact">
+                        <h2 class="section-title">历史记录</h2>
+                        <p class="helper">按时间倒序展示，保留编辑和删除操作，手机端会自动切换为更易读的卡片布局。</p>
+                    </div>
                     {% if records %}
                     <div class="table-scroll">
                         <table>
