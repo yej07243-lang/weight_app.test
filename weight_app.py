@@ -85,6 +85,7 @@ AUTH_TEMPLATE = """
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
         }
 
         .shell {
@@ -98,7 +99,7 @@ AUTH_TEMPLATE = """
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 14px;
             padding: 28px;
             box-shadow: var(--shadow);
         }
@@ -164,10 +165,12 @@ AUTH_TEMPLATE = """
 
         input, button {
             width: 100%;
+            min-height: 48px;
             margin-top: 6px;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px 14px;
             font: inherit;
+            font-size: 16px;
         }
 
         input {
@@ -199,6 +202,7 @@ AUTH_TEMPLATE = """
             right: 8px;
             width: auto;
             min-width: 52px;
+            min-height: 36px;
             margin: 0;
             padding: 7px 10px;
             border: 1px solid var(--border);
@@ -225,6 +229,7 @@ AUTH_TEMPLATE = """
             font-weight: 700;
             cursor: pointer;
             transition: background 140ms ease, transform 140ms ease;
+            touch-action: manipulation;
         }
 
         button:hover {
@@ -265,7 +270,7 @@ AUTH_TEMPLATE = """
 
         @media (max-width: 780px) {
             body {
-                padding: 16px;
+                padding: 12px;
             }
 
             .shell {
@@ -273,7 +278,7 @@ AUTH_TEMPLATE = """
             }
 
             .card {
-                padding: 22px;
+                padding: 20px;
             }
 
             h1 {
@@ -395,13 +400,14 @@ INVITE_TEMPLATE = """
             color: var(--text);
             font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
         }
 
         .card {
             width: min(1120px, 100%);
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 14px;
             padding: 28px;
             box-shadow: var(--shadow);
         }
@@ -434,7 +440,7 @@ INVITE_TEMPLATE = """
             min-width: 0;
             padding: 18px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             background: #f8fafc;
         }
 
@@ -448,10 +454,12 @@ INVITE_TEMPLATE = """
 
         input, button, select {
             width: 100%;
+            min-height: 48px;
             margin-top: 6px;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px 14px;
             font: inherit;
+            font-size: 16px;
         }
 
         input, select {
@@ -471,6 +479,7 @@ INVITE_TEMPLATE = """
             color: #fff;
             font-weight: 700;
             cursor: pointer;
+            touch-action: manipulation;
         }
 
         button:hover {
@@ -525,6 +534,12 @@ INVITE_TEMPLATE = """
             font-size: 14px;
         }
 
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         th, td {
             padding: 10px 8px;
             border-bottom: 1px solid var(--border);
@@ -562,13 +577,14 @@ INVITE_TEMPLATE = """
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 42px;
+            min-height: 48px;
             padding: 0 14px;
-            border-radius: 8px;
+            border-radius: 12px;
             text-decoration: none;
             color: var(--primary);
             border: 1px solid var(--primary);
             font-weight: 700;
+            touch-action: manipulation;
         }
 
         .action-link:hover {
@@ -577,7 +593,7 @@ INVITE_TEMPLATE = """
 
         @media (max-width: 800px) {
             body {
-                padding: 14px;
+                padding: 12px;
             }
 
             .card {
@@ -586,6 +602,58 @@ INVITE_TEMPLATE = """
 
             .grid {
                 grid-template-columns: 1fr;
+            }
+
+            .actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            table,
+            thead,
+            tbody,
+            tr,
+            th,
+            td {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: grid;
+                gap: 12px;
+            }
+
+            tr {
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 12px;
+                background: #ffffff;
+            }
+
+            td {
+                display: grid;
+                grid-template-columns: 78px minmax(0, 1fr);
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #e6edf1;
+            }
+
+            td:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            td::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-size: 12px;
+                font-weight: 700;
             }
         }
     </style>
@@ -637,24 +705,26 @@ INVITE_TEMPLATE = """
                 </form>
 
                 {% if invite_rows %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>邀请码</th>
-                            <th>状态</th>
-                            <th>使用者</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in invite_rows %}
-                        <tr>
-                            <td>{{ row.code }}</td>
-                            <td>{% if row.used_at %}已使用{% else %}未使用{% endif %}</td>
-                            <td>{{ row.used_by or "-" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>邀请码</th>
+                                <th>状态</th>
+                                <th>使用者</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in invite_rows %}
+                            <tr>
+                                <td data-label="邀请码">{{ row.code }}</td>
+                                <td data-label="状态">{% if row.used_at %}已使用{% else %}未使用{% endif %}</td>
+                                <td data-label="使用者">{{ row.used_by or "-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
                 <p>还没有邀请码。</p>
                 {% endif %}
@@ -704,37 +774,39 @@ INVITE_TEMPLATE = """
         <section class="panel" style="margin-top: 16px;">
             <h2>账号列表</h2>
             {% if user_rows %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>用户名</th>
-                        <th>注册时间</th>
-                        <th>体重记录</th>
-                        <th>修改密码</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in user_rows %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.created_at }}</td>
-                        <td>{{ user.record_count }}</td>
-                        <td>
-                            <form class="inline-form" method="post" action="{{ url_for('set_user_password_route', user_id=user.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                {% if admin_key_required %}
-                                <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
-                                {% endif %}
-                                <input name="password" type="password" minlength="6" placeholder="新密码" required>
-                                <button type="submit">保存</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>注册时间</th>
+                            <th>体重记录</th>
+                            <th>修改密码</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in user_rows %}
+                        <tr>
+                            <td data-label="ID">{{ user.id }}</td>
+                            <td data-label="用户名">{{ user.username }}</td>
+                            <td data-label="注册时间">{{ user.created_at }}</td>
+                            <td data-label="体重记录">{{ user.record_count }}</td>
+                            <td data-label="修改密码">
+                                <form class="inline-form" method="post" action="{{ url_for('set_user_password_route', user_id=user.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    {% if admin_key_required %}
+                                    <input type="hidden" name="admin_key" value="{{ admin_key_value }}">
+                                    {% endif %}
+                                    <input name="password" type="password" minlength="6" placeholder="新密码" required>
+                                    <button type="submit">保存</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
             <p>还没有账号。</p>
             {% endif %}
@@ -786,11 +858,12 @@ PAGE_TEMPLATE = """
             background: var(--bg);
             color: var(--text);
             line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
         }
 
         .container {
-            width: min(1180px, calc(100vw - 32px));
-            margin: 32px auto;
+            width: min(1180px, calc(100vw - 24px));
+            margin: 24px auto;
         }
 
         .hero {
@@ -842,8 +915,8 @@ PAGE_TEMPLATE = """
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 14px;
+            padding: 22px;
             box-shadow: var(--shadow);
         }
 
@@ -871,9 +944,10 @@ PAGE_TEMPLATE = """
         }
 
         .stat-value {
-            font-size: 24px;
+            font-size: clamp(24px, 4vw, 30px);
             font-weight: 700;
             line-height: 1.15;
+            overflow-wrap: anywhere;
         }
 
         .stat-tip {
@@ -892,10 +966,12 @@ PAGE_TEMPLATE = """
 
         input, textarea, button {
             width: 100%;
-            border-radius: 8px;
+            min-height: 48px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             padding: 12px 14px;
             font: inherit;
+            font-size: 16px;
         }
 
         input, textarea {
@@ -915,6 +991,7 @@ PAGE_TEMPLATE = """
         textarea {
             min-height: 96px;
             resize: vertical;
+            line-height: 1.5;
         }
 
         button {
@@ -924,6 +1001,7 @@ PAGE_TEMPLATE = """
             font-weight: 700;
             cursor: pointer;
             transition: background 140ms ease, transform 140ms ease;
+            touch-action: manipulation;
         }
 
         button:hover {
@@ -960,9 +1038,9 @@ PAGE_TEMPLATE = """
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 42px;
+            min-height: 48px;
             padding: 0 14px;
-            border-radius: 8px;
+            border-radius: 12px;
             text-decoration: none;
             color: var(--primary);
             border: 1px solid var(--primary);
@@ -970,6 +1048,7 @@ PAGE_TEMPLATE = """
             font-weight: 700;
             transition: background 140ms ease, color 140ms ease;
             white-space: nowrap;
+            touch-action: manipulation;
         }
 
         .action-link:hover {
@@ -989,9 +1068,15 @@ PAGE_TEMPLATE = """
             position: relative;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chart-frame {
+            min-width: 640px;
         }
 
         .chart-tooltip {
@@ -1037,19 +1122,25 @@ PAGE_TEMPLATE = """
             display: inline-flex;
             gap: 4px;
             padding: 4px;
-            border-radius: 8px;
+            border-radius: 12px;
             background: #e8eef2;
             border: 1px solid var(--border);
             margin-bottom: 14px;
+            max-width: 100%;
         }
 
         .segmented a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 10px;
             text-decoration: none;
             color: var(--muted);
             font-size: 14px;
             font-weight: 700;
+            text-align: center;
         }
 
         .segmented a.active {
@@ -1100,6 +1191,7 @@ PAGE_TEMPLATE = """
         .table-scroll {
             width: 100%;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
@@ -1130,6 +1222,7 @@ PAGE_TEMPLATE = """
             color: var(--muted);
             font-size: 13px;
             white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .helper {
@@ -1172,11 +1265,16 @@ PAGE_TEMPLATE = """
             .filter-actions {
                 align-items: stretch;
             }
+
+            .chart-frame {
+                min-width: 580px;
+            }
         }
 
         @media (max-width: 560px) {
             .container {
-                width: min(100% - 24px, 1180px);
+                width: calc(100vw - 16px);
+                margin: 8px auto 16px;
             }
 
             .hero {
@@ -1201,10 +1299,78 @@ PAGE_TEMPLATE = """
                 width: 100%;
             }
 
+            .segmented {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
             .segmented a,
             .filter-actions > *,
             .row-actions > * {
                 flex: 1 1 0;
+            }
+
+            .filter-actions,
+            .row-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrap {
+                padding: 10px;
+            }
+
+            .chart-frame {
+                min-width: 520px;
+            }
+
+            table,
+            thead,
+            tbody,
+            tr,
+            th,
+            td {
+                display: block;
+            }
+
+            table {
+                min-width: 0;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: grid;
+                gap: 12px;
+            }
+
+            tr {
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 12px;
+                background: var(--surface);
+            }
+
+            td {
+                display: grid;
+                grid-template-columns: 76px minmax(0, 1fr);
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #e6edf1;
+            }
+
+            td:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            td::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-size: 12px;
+                font-weight: 700;
             }
         }
     </style>
@@ -1360,7 +1526,7 @@ PAGE_TEMPLATE = """
                     <div class="chart-grid">
                         {% if chart_svg %}
                         <div>
-                            <div class="chart-wrap">{{ chart_svg|safe }}</div>
+                            <div class="chart-wrap"><div class="chart-frame">{{ chart_svg|safe }}</div></div>
                             <div class="chart-caption">{{ chart_caption }}</div>
                         </div>
                         {% else %}
@@ -1369,7 +1535,7 @@ PAGE_TEMPLATE = """
 
                         {% if dual_chart_svg %}
                         <div>
-                            <div class="chart-wrap">{{ dual_chart_svg|safe }}</div>
+                            <div class="chart-wrap"><div class="chart-frame">{{ dual_chart_svg|safe }}</div></div>
                             <div class="chart-caption">体重与 BMI 双曲线联动查看，左轴为体重，右轴为 BMI。</div>
                         </div>
                         {% elif height_cm %}
@@ -1397,11 +1563,11 @@ PAGE_TEMPLATE = """
                             <tbody>
                                 {% for record in records %}
                                 <tr>
-                                    <td>{{ record["record_date"] }}</td>
-                                    <td>{{ "%.1f"|format(record["weight"]) }} kg</td>
-                                    <td>{% if record["bmi"] is not none %}{{ "%.1f"|format(record["bmi"]) }}{% else %}-{% endif %}</td>
-                                    <td>{% if record["note"] %}<div class="row-note">{{ record["note"] }}</div>{% else %}<span class="row-note">-</span>{% endif %}</td>
-                                    <td>
+                                    <td data-label="日期">{{ record["record_date"] }}</td>
+                                    <td data-label="体重">{{ "%.1f"|format(record["weight"]) }} kg</td>
+                                    <td data-label="BMI">{% if record["bmi"] is not none %}{{ "%.1f"|format(record["bmi"]) }}{% else %}-{% endif %}</td>
+                                    <td data-label="备注">{% if record["note"] %}<div class="row-note">{{ record["note"] }}</div>{% else %}<span class="row-note">-</span>{% endif %}</td>
+                                    <td data-label="操作">
                                         <div class="row-actions">
                                             <a class="action-link" href="{{ url_for('index', edit=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">编辑</a>
                                             <form method="post" action="{{ url_for('delete_record', record_id=record['id'], chart=chart_mode, start_date=start_date, end_date=end_date) }}">
@@ -1432,7 +1598,7 @@ PAGE_TEMPLATE = """
             tooltip.className = "chart-tooltip";
             wrap.appendChild(tooltip);
 
-            wrap.addEventListener("mousemove", (event) => {
+            const showTooltip = (event) => {
                 const point = event.target.closest(".chart-point");
                 if (!point) {
                     tooltip.classList.remove("visible");
@@ -1447,9 +1613,25 @@ PAGE_TEMPLATE = """
                 const offsetY = event.clientY - rect.top;
                 tooltip.style.left = `${offsetX}px`;
                 tooltip.style.top = `${offsetY}px`;
-            });
+            };
+
+            wrap.addEventListener("pointermove", showTooltip);
+            wrap.addEventListener("click", showTooltip);
 
             wrap.addEventListener("mouseleave", () => {
+                tooltip.classList.remove("visible");
+            });
+
+            wrap.addEventListener("pointerleave", () => {
+                tooltip.classList.remove("visible");
+            });
+        });
+
+        document.addEventListener("click", (event) => {
+            if (event.target.closest(".chart-wrap")) {
+                return;
+            }
+            document.querySelectorAll(".chart-tooltip").forEach((tooltip) => {
                 tooltip.classList.remove("visible");
             });
         });
