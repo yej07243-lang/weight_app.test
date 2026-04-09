@@ -5,7 +5,7 @@ import sqlite3
 import time
 from collections import OrderedDict
 from contextlib import closing
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import wraps
 from html import escape
 from pathlib import Path
@@ -41,6 +41,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE=os.getenv("SESSION_COOKIE_SAMESITE", "Lax"),
     SESSION_COOKIE_SECURE=env_bool("SESSION_COOKIE_SECURE", False),
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
     REGISTRATION_ENABLED=env_bool("REGISTRATION_ENABLED", True),
     REGISTER_INVITE_CODE=os.getenv("REGISTER_INVITE_CODE", ""),
     INVITE_ADMIN_KEY=os.getenv("INVITE_ADMIN_KEY", ""),
@@ -321,6 +322,7 @@ AUTH_TEMPLATE = """
                 </label>
                 <button type="submit">登录</button>
             </form>
+            <p class="helper">同一设备登录后，30 天内再次访问默认无需重新输入密码。</p>
             {% if registration_enabled %}
             <h2 class="form-title">注册</h2>
             <form method="post" action="{{ url_for('register') }}">
@@ -920,20 +922,29 @@ PAGE_TEMPLATE = """
             box-shadow: var(--shadow);
         }
 
+        .sidebar > .card,
+        .main > .card {
+            height: 100%;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             margin-bottom: 16px;
+            align-items: stretch;
         }
 
         .stat {
+            display: flex;
+            flex-direction: column;
             background: #ffffff;
             border: 1px solid var(--border);
             border-left: 4px solid var(--primary);
             border-radius: 8px;
             padding: 14px;
-            min-height: 104px;
+            min-height: 124px;
+            height: 100%;
             box-shadow: 0 10px 24px rgba(18, 32, 28, 0.06);
         }
 
@@ -954,6 +965,11 @@ PAGE_TEMPLATE = """
             font-size: 12px;
             color: var(--muted);
             margin-top: 6px;
+        }
+
+        .stat .bmi-badge {
+            margin-top: auto;
+            align-self: flex-start;
         }
 
         label {
@@ -1928,9 +1944,10 @@ def authenticate_user(username: str, password: str) -> tuple[bool, str]:
         ).fetchone()
     if not row or not check_password_hash(row["password_hash"], password):
         return False, "用户名或密码错误。"
+    session.permanent = True
     session["user_id"] = row["id"]
     session["username"] = row["username"]
-    return True, "登录成功。"
+    return True, "登录成功。当前设备 30 天内再次访问无需重新输入密码。"
 
 
 def parse_record_form(record_date: str, weight_raw: str) -> tuple[str, float]:
