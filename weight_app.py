@@ -931,27 +931,50 @@ PAGE_TEMPLATE = """
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             align-items: stretch;
         }
 
         .stat {
             display: flex;
             flex-direction: column;
-            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%);
             border: 1px solid var(--border);
-            border-left: 4px solid var(--primary);
-            border-radius: 8px;
-            padding: 14px;
+            border-left: none;
+            border-radius: 16px;
+            padding: 16px;
             min-height: 124px;
             height: 100%;
             box-shadow: 0 10px 24px rgba(18, 32, 28, 0.06);
         }
 
+        .stat::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--primary) 100%);
+        }
+
+        .stat::after {
+            content: "";
+            position: absolute;
+            top: -28px;
+            right: -18px;
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15, 118, 110, 0.1) 0%, rgba(15, 118, 110, 0) 72%);
+            pointer-events: none;
+        }
+
         .stat-label {
             color: var(--muted);
-            font-size: 13px;
-            margin-bottom: 6px;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            margin-bottom: 10px;
         }
 
         .stat-value {
@@ -959,12 +982,13 @@ PAGE_TEMPLATE = """
             font-weight: 700;
             line-height: 1.15;
             overflow-wrap: anywhere;
+            letter-spacing: -0.03em;
         }
 
         .stat-tip {
             font-size: 12px;
             color: var(--muted);
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .stat .bmi-badge {
@@ -1272,6 +1296,7 @@ PAGE_TEMPLATE = """
 
             .stats {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
 
             .filter-form {
@@ -1303,6 +1328,29 @@ PAGE_TEMPLATE = """
 
             .stats {
                 grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .stat {
+                min-height: 0;
+                padding: 14px 16px;
+            }
+
+            .stat-label {
+                margin-bottom: 8px;
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: clamp(28px, 8vw, 34px);
+            }
+
+            .stat-tip {
+                font-size: 13px;
+            }
+
+            .stat .bmi-badge {
+                margin-top: 10px;
             }
 
             .card {
